@@ -6,6 +6,11 @@
 
 # 🎨AUTO FARM FOR NOTPIXEL 🎨
 
+## MY OTHER BOTS
+
+### 💩 [Boinkers](https://github.com/YarmolenkoD/boinkers)
+### 🚀 [Moonbix](https://github.com/YarmolenkoD/moonbix)
+
 ## Recommendation before use
 
 # 🔥🔥 PYTHON version must be 3.10 🔥🔥
