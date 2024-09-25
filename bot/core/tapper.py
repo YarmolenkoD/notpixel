@@ -190,7 +190,7 @@ class Tapper:
 
         except Exception as error:
             self.error(
-                f"Unknown error during Authorization: {error}")
+                f"Unknown error during Authorization: <light-yellow>{error}</light-yellow>")
             await asyncio.sleep(delay=3)
 
     async def check_proxy(self, http_client: aiohttp.ClientSession, proxy: Proxy) -> None:
@@ -202,42 +202,33 @@ class Tapper:
             self.error(f"Proxy: {proxy} | Error: {error}")
 
     async def get_user_info(self, http_client: aiohttp.ClientSession):
-        tries = 0
-
         try:
             response = await http_client.get("https://notpx.app/api/v1/users/me", ssl=False)
 
             response.raise_for_status()
 
-            response_json = await response.json()
+            data = await response.json()
 
-            return response_json
+            return data
         except Exception as error:
-            self.error(f"{self.session_name} | Unknown error during get user info: {error}")
-
-#             if tries < 3:
-#                 tries += 1
-#                 logger.warning(f"{self.session_name} | Bot overloaded retrying get user info")
-#                 await asyncio.sleep(delay=random.randint(3, 7))
-#                 await self.get_user_info(http_client=http_client)
-#             else:
-#                 return None
+            self.error(f"{self.session_name} | Unknown error during get user info: <light-yellow>{error}</light-yellow>")
+            return None
 
     async def get_balance(self, http_client: aiohttp.ClientSession):
         try:
-            balance_req = await http_client.get('https://notpx.app/api/v1/mining/status')
+            response = await http_client.get('https://notpx.app/api/v1/mining/status')
 
-            balance_req.raise_for_status()
+            response.raise_for_status()
 
-            balance_json = await balance_req.json()
+            data = await response.json()
 
-            return balance_json['userBalance']
+            return data['userBalance']
         except Exception as error:
-            self.error(f"Unknown error during processing balance: {error}")
+            self.error(f"Unknown error during processing balance: <light-yellow>{error}</light-yellow>")
             await asyncio.sleep(delay=3)
             return None
 
-    async def paint(self, http_client: aiohttp.ClientSession):
+    async def draw(self, http_client: aiohttp.ClientSession):
         try:
             response = await http_client.get('https://notpx.app/api/v1/mining/status')
 
@@ -265,18 +256,18 @@ class Tapper:
                     "newColor": color
                 }
 
-                paint_request = await http_client.post(
+                draw_request = await http_client.post(
                     'https://notpx.app/api/v1/repaint/start',
                     json=payload
                 )
 
-                paint_request.raise_for_status()
+                draw_request.raise_for_status()
 
                 self.info(f"Painted (X: <cyan>{x}</cyan>, Y: <cyan>{y}</cyan>) with color <light-blue>{color}</light-blue> 🎨️")
 
                 await asyncio.sleep(delay=random.randint(5, 10))
         except Exception as error:
-            self.error(f"Unknown error during painting: {error}")
+            self.error(f"Unknown error during painting: <light-yellow>{error}</light-yellow>")
             await asyncio.sleep(delay=3)
 
     async def upgrade(self, http_client: aiohttp.ClientSession):
@@ -307,39 +298,10 @@ class Tapper:
                             return
 
         except Exception as error:
-            self.error(f"Unknown error during upgrading: {error}")
+            self.error(f"Unknown error during upgrading: <light-yellow>{error}</light-yellow>")
             await asyncio.sleep(delay=3)
 
-    async def claim(self, http_client: aiohttp.ClientSession):
-        try:
-            self.info(f"Claiming mine")
-
-            response = await http_client.get(f'https://notpx.app/api/v1/mining/status')
-
-            response.raise_for_status()
-
-            response_json = await response.json()
-
-            await asyncio.sleep(delay=random.randint(4, 6))
-
-            for _ in range(2):
-                try:
-                    response = await http_client.get(f'https://notpx.app/api/v1/mining/claim')
-
-                    response.raise_for_status()
-
-                    response_json = await response.json()
-                except Exception as error:
-                    self.info(f"First claiming not always successful, retrying..")
-                else:
-                    break
-
-            return response_json['claimed']
-        except Exception as error:
-            self.error(f"Unknown error during claiming reward: {error}")
-
-            await asyncio.sleep(delay=3)
-    async def tasks(self, http_client: aiohttp.ClientSession):
+    async def run_tasks(self, http_client: aiohttp.ClientSession):
         try:
             res = await http_client.get('https://notpx.app/api/v1/mining/status')
 
@@ -348,8 +310,6 @@ class Tapper:
             data = await res.json()
 
             tasks = data['tasks'].keys()
-
-            self.debug(tasks)
 
             for task in settings.TASKS_TODO_LIST:
                 if task not in tasks:
@@ -376,7 +336,35 @@ class Tapper:
                     await asyncio.sleep(delay=random.randint(3, 7))
 
         except Exception as error:
-            self.error(f"Unknown error during processing tasks: {error}")
+            self.error(f"Unknown error during processing tasks: <light-yellow>{error}</light-yellow>")
+
+    async def claim_mine(self, http_client: aiohttp.ClientSession):
+        try:
+            response = await http_client.get(f'https://notpx.app/api/v1/mining/status')
+
+            response.raise_for_status()
+
+            response_json = await response.json()
+
+            await asyncio.sleep(delay=random.randint(4, 6))
+
+            for _ in range(2):
+                try:
+                    response = await http_client.get(f'https://notpx.app/api/v1/mining/claim')
+
+                    response.raise_for_status()
+
+                    response_json = await response.json()
+                except Exception as error:
+                    self.info(f"First claiming not always successful, retrying..")
+                else:
+                    break
+
+            return response_json['claimed']
+        except Exception as error:
+            self.error(f"Unknown error during claiming reward: <light-yellow>{error}</light-yellow>")
+
+            await asyncio.sleep(delay=3)
 
     async def run(self, proxy: str | None) -> None:
         if settings.USE_RANDOM_DELAY_IN_RUN:
@@ -423,7 +411,7 @@ class Tapper:
                 await asyncio.sleep(delay=3)
 
             except Exception as error:
-                self.error(f"Unknown error during login: {error}")
+                self.error(f"Unknown error during login: <light-yellow>{error}</light-yellow>")
                 await asyncio.sleep(delay=3)
                 break
 
@@ -441,18 +429,20 @@ class Tapper:
                         self.info(f"Current balance: <light-green>{'{:,.3f}'.format(current_balance)}</light-green> 🔳")
 
                     if settings.ENABLE_AUTO_DRAW:
-                        await self.paint(http_client=http_client)
+                        await self.draw(http_client=http_client)
 
                     if settings.ENABLE_AUTO_UPGRADE:
-                        reward_status = await self.upgrade(http_client=http_client)
+                        status = await self.upgrade(http_client=http_client)
+                        if reward is not None:
+                            self.info(f"Claim reward: <light-green>{status}</light-green> ✔️")
 
                     if settings.ENABLE_CLAIM_REWARD:
-                        reward_status = await self.claim(http_client=http_client)
-                        if reward_status is not None:
-                            self.info(f"Claim reward: <light-green>{'{:,.3f}'.format(reward_status)}</light-green> 🔳")
+                        reward = await self.claim_mine(http_client=http_client)
+                        if reward is not None:
+                            self.info(f"Claim reward: <light-green>{'{:,.3f}'.format(reward)}</light-green> 🔳")
 
                     if settings.ENABLE_AUTO_TASKS:
-                        await self.tasks(http_client=http_client)
+                        await self.run_tasks(http_client=http_client)
 
                 sleep_time = random.randint(settings.SLEEP_TIME_IN_MINUTES[0], settings.SLEEP_TIME_IN_MINUTES[1])
 
@@ -463,7 +453,7 @@ class Tapper:
                 await asyncio.sleep(delay=sleep_in_minutes*60)
 
             except Exception as error:
-                self.error(f"Unknown error: {error}")
+                self.error(f"Unknown error: <light-yellow>{error}</light-yellow>")
 
 async def run_tapper(tg_client: Client, proxy: str | None):
     try:
