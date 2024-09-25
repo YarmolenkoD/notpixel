@@ -384,7 +384,7 @@ class Tapper:
             await self.check_proxy(http_client=http_client, proxy=proxy)
 
         access_token_created_time = 0
-        token_live_time = random.randint(28700, 28800)
+        token_live_time = random.randint(3500, 3600)
 
         while True:
             try:
@@ -446,11 +446,9 @@ class Tapper:
 
                 sleep_time = random.randint(settings.SLEEP_TIME_IN_MINUTES[0], settings.SLEEP_TIME_IN_MINUTES[1])
 
-                sleep_in_minutes = round(sleep_time / 60, 1)
+                self.info(f"sleep {sleep_time} minutes between cycles 💤")
 
-                self.info(f"sleep {sleep_in_minutes} minutes between cycles 💤")
-
-                await asyncio.sleep(delay=sleep_in_minutes*60)
+                await asyncio.sleep(delay=sleep_time*60)
 
             except Exception as error:
                 self.error(f"Unknown error: <light-yellow>{error}</light-yellow>")
