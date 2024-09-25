@@ -433,7 +433,7 @@ class Tapper:
 
                     if settings.ENABLE_AUTO_UPGRADE:
                         status = await self.upgrade(http_client=http_client)
-                        if reward is not None:
+                        if status is not None:
                             self.info(f"Claim reward: <light-green>{status}</light-green> ✔️")
 
                     if settings.ENABLE_CLAIM_REWARD:
