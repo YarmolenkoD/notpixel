@@ -205,7 +205,7 @@ class Tapper:
         tries = 0
 
         try:
-            response = await http_client.get("https://notpx.app/api/v1/users/me")
+            response = await http_client.get("https://notpx.app/api/v1/users/me", ssl=False)
 
             response.raise_for_status()
 
@@ -272,7 +272,7 @@ class Tapper:
 
                 paint_request.raise_for_status()
 
-                self.info(f"Painted {x} {y} with color {color} 🎨️")
+                self.info(f"Painted (X: <cyan>{x}</cyan>, Y: <cyan>{y}</cyan>) with color <light-blue>{color}</light-blue> 🎨️")
 
                 await asyncio.sleep(delay=random.randint(5, 10))
         except Exception as error:
@@ -352,12 +352,12 @@ class Tapper:
             self.debug(tasks)
 
             for task in settings.TASKS_TODO_LIST:
-                if task not in done_task_list:
+                if task not in tasks:
                     response = await http_client.get(f'https://notpx.app/api/v1/mining/task/check/{task}')
 
                     response.raise_for_status()
 
-                    data = await tasks_status.json()
+                    data = await response.json()
 
                     status = data[task]
 
@@ -366,7 +366,10 @@ class Tapper:
 
                         current_balance = await self.get_balance(http_client=http_client)
 
-                        self.info(f"Current balance: 🔳{current_balance} 🔳")
+                        if current_balance is None:
+                            self.info(f"Current balance: Unknown 🔳")
+                        else:
+                            self.info(f"Current balance: <light-green>{'{:,.3f}'.format(current_balance)}</light-green> 🔳")
                     else:
                         self.warning(f"Task requirements were not met <cyan>{task}</cyan>")
 
@@ -432,7 +435,10 @@ class Tapper:
                 if user is not None:
                     current_balance = await self.get_balance(http_client=http_client)
 
-                    self.info(f"Current balance: 🔳<light-green>{'{:,.3f}'.format(current_balance)}</light-green> 🔳")
+                    if current_balance is None:
+                        self.info(f"Current balance: Unknown 🔳")
+                    else:
+                        self.info(f"Current balance: <light-green>{'{:,.3f}'.format(current_balance)}</light-green> 🔳")
 
                     if settings.ENABLE_AUTO_DRAW:
                         await self.paint(http_client=http_client)
@@ -442,7 +448,7 @@ class Tapper:
 
                     if settings.ENABLE_CLAIM_REWARD:
                         reward_status = await self.claim(http_client=http_client)
-                        self.info(f"Claim reward: <light-green>{reward_status}</light-green>")
+                        self.info(f"Claim reward: <light-green>{reward_status}</light-green> ✔️")
 
                     if settings.ENABLE_AUTO_TASKS:
                         await self.tasks(http_client=http_client)
