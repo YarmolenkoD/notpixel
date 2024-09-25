@@ -448,7 +448,8 @@ class Tapper:
 
                     if settings.ENABLE_CLAIM_REWARD:
                         reward_status = await self.claim(http_client=http_client)
-                        self.info(f"Claim reward: <light-green>{reward_status}</light-green> ✔️")
+                        if reward_status is not None:
+                            self.info(f"Claim reward: <light-green>{'{:,.3f}'.format(reward_status)}</light-green> 🔳")
 
                     if settings.ENABLE_AUTO_TASKS:
                         await self.tasks(http_client=http_client)
