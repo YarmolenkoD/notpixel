@@ -203,7 +203,7 @@ class Tapper:
 
     async def get_user_info(self, http_client: aiohttp.ClientSession):
         try:
-            response = await http_client.get("https://notpx.app/api/v1/users/me", ssl=False)
+            response = await http_client.get("https://notpx.app/api/v1/users/me")
 
             response.raise_for_status()
 
