@@ -55,26 +55,27 @@ async def invoke_web_view(data, self):
     count = len(sessions)
 
     first_byte = 70
-    second_byte = 20
-    third_byte = 10
+    second_byte = 30
+    third_byte = 0
 
     if count > 50:
         first_byte = 60
-        second_byte = 30
-        third_byte = 10
+        second_byte = 40
+        third_byte = 0
     elif count > 15:
         first_byte = 70
-        second_byte = 20
-        third_byte = 10
+        second_byte = 30
+        third_byte = 0
     elif count > 5:
         first_byte = 75
-        second_byte = 20
-        third_byte = 5
+        second_byte = 25
+        third_byte = 0
     else:
         first_byte = 100
-        second_byte = 00
+        second_byte = 0
+        third_byte = 0
 
-    param = random.choices([data.start_param, get_logger_bytes(), get_random_logger_bytes()], weights=[first_byte, second_byte, third_byte], k=1)[0]
+    param = random.choices([data.start_param, get_logger_bytes()], weights=[first_byte, second_byte], k=1)[0]
 
     web_view = await self.tg_client.invoke(RequestAppWebView(
         peer=data.peer,
