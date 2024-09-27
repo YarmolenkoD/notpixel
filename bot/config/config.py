@@ -24,6 +24,17 @@ class Settings(BaseSettings):
     DRAW_RANDOM_Y_DIAPOSON: list[int] = [0, 100]
     DRAW_RANDOM_COLORS: list[str] = ["#000000"]
 
+    ENABLE_DRAW_ART: bool = True
+    DRAW_ART_COORDS: list[dict] = [
+        {
+            'color': "#6A5CFF",
+            'x': { 'type': 'diaposon', 'value': [995, 999] },
+            'y': { 'type': 'random', 'value': [995, 999] }
+        }
+    ]
+
+    ENABLE_SSL: bool = False
+
     BOOSTS_BLACK_LIST: list[str] = ['INVITE_FRIENDS', 'TON_TRANSACTION', 'BOOST_CHANNEL', 'ACTIVITY_CHALLENGE', 'CONNECT_WALLET']
     TASKS_TODO_LIST: list[str] = ["x:notcoin", "x:notpixel", "paint20pixels", "leagueBonusSilver", "invite3frens", "leagueBonusGold"]
 

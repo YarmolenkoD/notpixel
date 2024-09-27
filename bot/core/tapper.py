@@ -239,10 +239,26 @@ class Tapper:
             charges = data['charges']
 
             for _ in range(charges):
-                x = random.randint(settings.DRAW_RANDOM_X_DIAPOSON[0], settings.DRAW_RANDOM_X_DIAPOSON[1])
-                y = random.randint(settings.DRAW_RANDOM_Y_DIAPOSON[0], settings.DRAW_RANDOM_Y_DIAPOSON[1])
+                if settings.ENABLE_DRAW_ART:
+                    curr = random.choice(settings.DRAW_ART_COORDS)
 
-                color = random.choice(settings.DRAW_RANDOM_COLORS)
+                    if curr['x']['type'] == 'diaposon':
+                        x = random.randint(curr['x']['value'][0], curr['x']['value'][1])
+                    else:
+                        x = random.choice(curr['x']['value'])
+
+                    if curr['y']['type'] == 'diaposon':
+                        y = random.randint(curr['y']['value'][0], curr['y']['value'][1])
+                    else:
+                        y = random.choice(curr['y']['value'])
+
+                    color = curr['color']
+
+                else:
+                    x = random.randint(settings.DRAW_RANDOM_X_DIAPOSON[0], settings.DRAW_RANDOM_X_DIAPOSON[1])
+                    y = random.randint(settings.DRAW_RANDOM_Y_DIAPOSON[0], settings.DRAW_RANDOM_Y_DIAPOSON[1])
+
+                    color = random.choice(settings.DRAW_RANDOM_COLORS)
 
                 payload = {
                     "pixelId": int(f"{y}{x}")+1,
