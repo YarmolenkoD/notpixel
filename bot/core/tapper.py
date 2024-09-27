@@ -203,7 +203,7 @@ class Tapper:
 
     async def get_user_info(self, http_client: aiohttp.ClientSession):
         try:
-            response = await http_client.get("https://notpx.app/api/v1/users/me")
+            response = await http_client.get("https://notpx.app/api/v1/users/me", ssl=settings.ENABLE_SSL)
 
             response.raise_for_status()
 
@@ -216,7 +216,7 @@ class Tapper:
 
     async def get_balance(self, http_client: aiohttp.ClientSession):
         try:
-            response = await http_client.get('https://notpx.app/api/v1/mining/status')
+            response = await http_client.get('https://notpx.app/api/v1/mining/status', ssl=settings.ENABLE_SSL)
 
             response.raise_for_status()
 
@@ -230,13 +230,18 @@ class Tapper:
 
     async def draw(self, http_client: aiohttp.ClientSession):
         try:
-            response = await http_client.get('https://notpx.app/api/v1/mining/status')
+            response = await http_client.get('https://notpx.app/api/v1/mining/status', ssl=settings.ENABLE_SSL)
 
             response.raise_for_status()
 
             data = await response.json()
 
             charges = data['charges']
+
+            if len(charges) > 0:
+                self.info(f"Energy: {charges} ⚡️")
+            else:
+                self.info(f"No energy ⚡️")
 
             for _ in range(charges):
                 if settings.ENABLE_DRAW_ART:
@@ -267,12 +272,13 @@ class Tapper:
 
                 draw_request = await http_client.post(
                     'https://notpx.app/api/v1/repaint/start',
-                    json=payload
+                    json=payload,
+                    ssl=settings.ENABLE_SSL
                 )
 
                 draw_request.raise_for_status()
 
-                self.info(f"Painted (X: <cyan>{x}</cyan>, Y: <cyan>{y}</cyan>) with color <light-blue>{color}</light-blue> 🎨️")
+                self.success(f"Painted (X: <cyan>{x}</cyan>, Y: <cyan>{y}</cyan>) with color <light-blue>{color}</light-blue> 🎨️")
 
                 await asyncio.sleep(delay=random.randint(5, 10))
         except Exception as error:
@@ -282,7 +288,7 @@ class Tapper:
     async def upgrade(self, http_client: aiohttp.ClientSession):
         try:
             while True:
-                response = await http_client.get('https://notpx.app/api/v1/mining/status')
+                response = await http_client.get('https://notpx.app/api/v1/mining/status', ssl=settings.ENABLE_SSL)
 
                 response.raise_for_status()
 
@@ -293,7 +299,7 @@ class Tapper:
                 for name, level in sorted(boosts.items(), key=lambda item: item[1]):
                     if name not in settings.BOOSTS_BLACK_LIST:
                         try:
-                            res = await http_client.get(f'https://notpx.app/api/v1/mining/boost/check/{name}')
+                            res = await http_client.get(f'https://notpx.app/api/v1/mining/boost/check/{name}', ssl=settings.ENABLE_SSL)
 
                             res.raise_for_status()
 
@@ -312,7 +318,7 @@ class Tapper:
 
     async def run_tasks(self, http_client: aiohttp.ClientSession):
         try:
-            res = await http_client.get('https://notpx.app/api/v1/mining/status')
+            res = await http_client.get('https://notpx.app/api/v1/mining/status', ssl=settings.ENABLE_SSL)
 
             res.raise_for_status()
 
@@ -322,7 +328,7 @@ class Tapper:
 
             for task in settings.TASKS_TODO_LIST:
                 if task not in tasks:
-                    response = await http_client.get(f'https://notpx.app/api/v1/mining/task/check/{task}')
+                    response = await http_client.get(f'https://notpx.app/api/v1/mining/task/check/{task}', ssl=settings.ENABLE_SSL)
 
                     response.raise_for_status()
 
@@ -349,7 +355,7 @@ class Tapper:
 
     async def claim_mine(self, http_client: aiohttp.ClientSession):
         try:
-            response = await http_client.get(f'https://notpx.app/api/v1/mining/status')
+            response = await http_client.get(f'https://notpx.app/api/v1/mining/status', ssl=settings.ENABLE_SSL)
 
             response.raise_for_status()
 
@@ -359,7 +365,7 @@ class Tapper:
 
             for _ in range(2):
                 try:
-                    response = await http_client.get(f'https://notpx.app/api/v1/mining/claim')
+                    response = await http_client.get(f'https://notpx.app/api/v1/mining/claim', ssl=settings.ENABLE_SSL)
 
                     response.raise_for_status()
 
