@@ -20,11 +20,11 @@ class Settings(BaseSettings):
     ENABLE_CLAIM_REWARD: bool = True
     ENABLE_AUTO_UPGRADE: bool = True
 
-    DRAW_RANDOM_X_DIAPOSON: list[int] = [0, 100]
-    DRAW_RANDOM_Y_DIAPOSON: list[int] = [0, 100]
+    DRAW_RANDOM_X_DIAPOSON: list[int] = [0, 900]
+    DRAW_RANDOM_Y_DIAPOSON: list[int] = [0, 900]
     DRAW_RANDOM_COLORS: list[str] = ["#000000"]
 
-    ENABLE_DRAW_ART: bool = True
+    ENABLE_DRAW_ART: bool = False
     DRAW_ART_COORDS: list[dict] = [
         {
             'color': "#6A5CFF",
@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     ENABLE_SSL: bool = False
 
     BOOSTS_BLACK_LIST: list[str] = ['INVITE_FRIENDS', 'TON_TRANSACTION', 'BOOST_CHANNEL', 'ACTIVITY_CHALLENGE', 'CONNECT_WALLET']
-    TASKS_TODO_LIST: list[str] = ["x:notcoin", "x:notpixel", "paint20pixels", "leagueBonusSilver", "invite3frens", "leagueBonusGold", "channel:notpixel_channel", "channel:notcoin"]
+    TASKS_TODO_LIST: list[str] = ["x:notcoin", "x:notpixel", "paint20pixels", "leagueBonusSilver", "invite3frens", "leagueBonusGold", "channel:notpixel_channel", "channel:notcoin", "premium"]
 
     USE_PROXY_FROM_FILE: bool = True
 
