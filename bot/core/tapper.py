@@ -399,7 +399,7 @@ class Tapper:
             await self.check_proxy(http_client=http_client, proxy=proxy)
 
         access_token_created_time = 0
-        token_live_time = random.randint(3500, 3600)
+        token_live_time = random.randint(500, 900)
 
         while True:
             try:
@@ -415,7 +415,7 @@ class Tapper:
                     http_client.headers['Authorization'] = f"initData {tg_web_data}"
 
                     access_token_created_time = time()
-                    token_live_time = random.randint(3500, 3600)
+                    token_live_time = random.randint(500, 900)
 
                     if self.first_run is not True:
                         self.success("Logged in successfully")

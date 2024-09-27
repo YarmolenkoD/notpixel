@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     USE_RANDOM_DELAY_IN_RUN: bool = True
     RANDOM_DELAY_IN_RUN: list[int] = [5, 60]
 
-    SLEEP_TIME_IN_MINUTES: list[int] = [120, 180]
+    SLEEP_TIME_IN_MINUTES: list[int] = [30, 60]
 
     ENABLE_AUTO_TASKS: bool = False
     ENABLE_AUTO_DRAW: bool = True
