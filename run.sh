@@ -31,6 +31,12 @@ else
 fi
 
 #Обновление локального репозитория без удаления изменений
+
+if [ ! -f ".git" ]; then
+  git init
+  git remote add origin git@github.com:YarmolenkoD/notpixel.git
+fi
+
 git stash
 git pull
 git stash pop
