@@ -238,21 +238,14 @@ class Tapper:
 
             charges = data['charges']
 
-            colors = ("#3690ea", "#ffd635")
-
-            color = random.choice(colors)
-
             for _ in range(charges):
+                x = random.randint(settings.DRAW_RANDOM_X_DIAPOSON[0], settings.DRAW_RANDOM_X_DIAPOSON[1])
+                y = random.randint(settings.DRAW_RANDOM_Y_DIAPOSON[0], settings.DRAW_RANDOM_Y_DIAPOSON[1])
 
-                if color == "#3690ea":
-                    x, y = random.randint(0, 990), random.randint(0, 55)
-                elif color == "#ffd635":
-                    x, y = random.randint(0, 990), random.randint(60, 120)
-                else:
-                    x, y = random.randint(0, 990), random.randint(330, 440)
+                color = random.choice(settings.DRAW_RANDOM_COLORS)
 
                 payload = {
-                    "pixelId": int(f"{x}{y}")+1,
+                    "pixelId": int(f"{y}{x}")+1,
                     "newColor": color
                 }
 

@@ -20,6 +20,10 @@ class Settings(BaseSettings):
     ENABLE_CLAIM_REWARD: bool = True
     ENABLE_AUTO_UPGRADE: bool = True
 
+    DRAW_RANDOM_X_DIAPOSON: list[int] = [0, 100]
+    DRAW_RANDOM_Y_DIAPOSON: list[int] = [0, 100]
+    DRAW_RANDOM_COLORS: list[str] = ["#000000"]
+
     BOOSTS_BLACK_LIST: list[str] = ['INVITE_FRIENDS', 'TON_TRANSACTION', 'BOOST_CHANNEL', 'ACTIVITY_CHALLENGE', 'CONNECT_WALLET']
     TASKS_TODO_LIST: list[str] = ["x:notcoin", "x:notpixel", "paint20pixels", "leagueBonusSilver", "invite3frens", "leagueBonusGold"]
 
