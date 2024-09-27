@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 from dateutil import parser
 from time import time
 from urllib.parse import unquote, quote
+import re
 
 from json import dump as dp, loads as ld
 from aiocfscrape import CloudflareScraper
@@ -238,8 +239,8 @@ class Tapper:
 
             charges = data['charges']
 
-            if len(charges) > 0:
-                self.info(f"Energy: {charges} ⚡️")
+            if charges > 0:
+                self.info(f"Energy: <cyan>{charges}</cyan> ⚡️")
             else:
                 self.info(f"No energy ⚡️")
 
@@ -328,7 +329,25 @@ class Tapper:
 
             for task in settings.TASKS_TODO_LIST:
                 if task not in tasks:
-                    response = await http_client.get(f'https://notpx.app/api/v1/mining/task/check/{task}', ssl=settings.ENABLE_SSL)
+                    if re.search(':', task) is not None:
+                        split_str = task.split(':')
+                        social = split_str[0]
+                        name = split_str[1]
+
+                        if social == 'channel' and settings.ENABLE_JOIN_TG_CHANNELS:
+                            try:
+                                if not self.tg_client.is_connected:
+                                    await self.tg_client.connect()
+                                await self.tg_client.join_chat(task)
+                                await self.tg_client.disconnect()
+                                await asyncio.sleep(delay=random.randint(3, 5))
+                                self.success(f"Successfully joined to the <cyan>{task}</cyan> channel ✔️")
+                            except Exception as error:
+                                self.error(f"Unknown error during joining to {task} channel: <light-yellow>{error}</light-yellow>")
+
+                        response = await http_client.get(f'https://notpx.app/api/v1/mining/task/check/{social}?name={name}', ssl=settings.ENABLE_SSL)
+                    else:
+                        response = await http_client.get(f'https://notpx.app/api/v1/mining/task/check/{task}', ssl=settings.ENABLE_SSL)
 
                     response.raise_for_status()
 
