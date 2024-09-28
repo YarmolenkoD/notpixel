@@ -6,6 +6,9 @@
 
 # 🎨AUTO FARM FOR NOTPIXEL 🎨
 
+> [!WARNING]
+> I am not responsible for your account. Please consider the potential risks before using this bot.
+
 ## MY OTHER BOTS
 
 ### 💩 [Boinkers](https://github.com/YarmolenkoD/boinkers)
