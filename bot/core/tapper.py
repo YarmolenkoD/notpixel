@@ -345,6 +345,10 @@ class Tapper:
                                 self.success(f"Successfully joined to the <cyan>{name}</cyan> channel ✔️")
                             except Exception as error:
                                 self.error(f"Unknown error during joining to {name} channel: <light-yellow>{error}</light-yellow>")
+                            finally:
+                                # Disconnect the client only if necessary, for instance, when the entire task is done
+                                if self.tg_client.is_connected:
+                                    await self.tg_client.disconnect()
 
                         response = await http_client.get(f'https://notpx.app/api/v1/mining/task/check/{social}?name={name}', ssl=settings.ENABLE_SSL)
                     else:
