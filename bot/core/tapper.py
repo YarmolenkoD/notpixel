@@ -338,12 +338,13 @@ class Tapper:
                             try:
                                 if not self.tg_client.is_connected:
                                     await self.tg_client.connect()
-                                await self.tg_client.join_chat(task)
+                                await asyncio.sleep(delay=random.randint(2, 3))
+                                await self.tg_client.join_chat(name)
                                 await self.tg_client.disconnect()
                                 await asyncio.sleep(delay=random.randint(3, 5))
-                                self.success(f"Successfully joined to the <cyan>{task}</cyan> channel ✔️")
+                                self.success(f"Successfully joined to the <cyan>{name}</cyan> channel ✔️")
                             except Exception as error:
-                                self.error(f"Unknown error during joining to {task} channel: <light-yellow>{error}</light-yellow>")
+                                self.error(f"Unknown error during joining to {name} channel: <light-yellow>{error}</light-yellow>")
 
                         response = await http_client.get(f'https://notpx.app/api/v1/mining/task/check/{social}?name={name}', ssl=settings.ENABLE_SSL)
                     else:
