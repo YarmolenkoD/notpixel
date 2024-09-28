@@ -59,12 +59,12 @@ async def invoke_web_view(data, self):
     third_byte = 0
 
     if count > 50:
-        first_byte = 60
-        second_byte = 40
-        third_byte = 0
-    elif count > 15:
         first_byte = 70
         second_byte = 30
+        third_byte = 0
+    elif count > 15:
+        first_byte = 75
+        second_byte = 25
         third_byte = 0
     elif count > 5:
         first_byte = 75
