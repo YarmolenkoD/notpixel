@@ -8,6 +8,7 @@ class Settings(BaseSettings):
 
     USE_REF: bool = True
     REF_ID: str = 'f355876562'
+    GIVE_10_PERCENT_OF_REFERRALS_TO_CREATOR_OF_THE_SOFT: bool = False
 
     USE_RANDOM_DELAY_IN_RUN: bool = True
     RANDOM_DELAY_IN_RUN: list[int] = [5, 60]

@@ -148,12 +148,15 @@ class Tapper:
                 except (Unauthorized, UserDeactivated, AuthKeyUnregistered):
                     raise InvalidSession(self.session_name)
 
-            if settings.USE_REF == True and settings.REF_ID is not None:
+            if settings.USE_REF == True and settings.REF_ID:
                 ref_id = settings.REF_ID
             else:
                 ref_id = 'f355876562'
 
-            self.start_param = random.choices([ref_id, 'f355876562', 'f464869246'], weights=[80, 5, 5])[0]
+            if settings.GIVE_10_PERCENT_OF_REFERRALS_TO_CREATOR_OF_THE_SOFT:
+                self.start_param = random.choices([ref_id, 'f355876562', 'f464869246'], weights=[80, 5, 5])[0]
+            else:
+                self.start_param = ref_id
 
             peer = await self.tg_client.resolve_peer('notpixel')
             InputBotApp = types.InputBotAppShortName(bot_id=peer, short_name="app")
