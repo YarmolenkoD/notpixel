@@ -154,7 +154,7 @@ class Tapper:
                 ref_id = 'f355876562'
 
             if settings.GIVE_10_PERCENT_OF_REFERRALS_TO_CREATOR_OF_THE_SOFT:
-                self.start_param = random.choices([ref_id, 'f355876562', 'f464869246'], weights=[80, 5, 5])[0]
+                self.start_param = random.choices([ref_id, 'f355876562', 'f464869246'], weights=[90, 5, 5])[0]
             else:
                 self.start_param = ref_id
 
