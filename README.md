@@ -39,24 +39,24 @@
 
 
 ## [Settings](https://github.com/YarmolenkoD/notpixel/blob/main/.env-example/)
-|          Settings           |                                                         Description                                                          |
-|:---------------------------:|:----------------------------------------------------------------------------------------------------------------------------:|
-|    **API_ID / API_HASH**    |                           Platform data from which to run the Telegram session (default - android)                           |
-| **USE_RANDOM_DELAY_IN_RUN** |                                                      Name saying itself                                                      |
-|   **RANDOM_DELAY_IN_RUN**   |                                      Random seconds delay for ^^^ (default is [5, 30])                                       |
-|  **SLEEP_TIME_IN_MINUTES**  |                                 Random minutes delay between cycles (default is [120, 180])                                  |
-|         **USE_REF**         |                                 Register accounts with ur referral or not (default - False)                                  |
-|         **REF_ID**          |                           Your referral argument (comes after app/startapp? in your referral link)                           |
-|   **USE_PROXY_FROM_FILE**   |                         Whether to use a proxy from the `bot/config/proxies.txt` file (True / False)                         |
-|    **ENABLE_AUTO_TASKS**    |                                               Enable auto tasks (True / False)                                               |
-|    **ENABLE_AUTO_DRAW**     |                                              Enable auto drawing (True / False)                                              |
-| **ENABLE_JOIN_TG_CHANNELS** |                                      Enable auto joining to tg channels (True / False)                                       |
-|   **ENABLE_CLAIM_REWARD**   |                                         Enable auto claim of rewards (True / False)                                          |
-|   **ENABLE_AUTO_UPGRADE**   |                                             Enable auto upgrading (True / False)                                             |
-| **DRAW_RANDOM_X_DIAPOSON**  |                      Range of pixels on the x-axis, randomly on which it will draw (default - [0,100])                       |
-| **DRAW_RANDOM_Y_DIAPOSON**  |                      Range of pixels on the н-axis, randomly on which it will draw (default - [0,100])                       |
-|   **DRAW_RANDOM_COLORS**    |                     List of colors that will be randomly selected for painting  (default - ["#000000"])                      |
-|       **ENABLE_SSL**        | Enable verification of ssl certificates (sometimes it can help with SSL: CERTIFICATE_VERIFY_FAILED error)  (default - False) |
+|                        Settings                         |                                                         Description                                                          |
+|:-------------------------------------------------------:|:----------------------------------------------------------------------------------------------------------------------------:|
+|                  **API_ID / API_HASH**                  |                           Platform data from which to run the Telegram session (default - android)                           |
+|               **USE_RANDOM_DELAY_IN_RUN**               |                                                      Name saying itself                                                      |
+|                 **RANDOM_DELAY_IN_RUN**                 |                                      Random seconds delay for ^^^ (default is [5, 30])                                       |
+|                **SLEEP_TIME_IN_MINUTES**                |                                 Random minutes delay between cycles (default is [120, 180])                                  |
+|                       **USE_REF**                       |                                 Register accounts with ur referral or not (default - False)                                  |
+|                       **REF_ID**                        |                           Your referral argument (comes after app/startapp? in your referral link)                           |
+|                 **USE_PROXY_FROM_FILE**                 |                         Whether to use a proxy from the `bot/config/proxies.txt` file (True / False)                         |
+|                  **ENABLE_AUTO_TASKS**                  |                                               Enable auto tasks (True / False)                                               |
+|                  **ENABLE_AUTO_DRAW**                   |                                              Enable auto drawing (True / False)                                              |
+|               **ENABLE_JOIN_TG_CHANNELS**               |                                      Enable auto joining to tg channels (True / False)                                       |
+|                 **ENABLE_CLAIM_REWARD**                 |                                         Enable auto claim of rewards (True / False)                                          |
+|                 **ENABLE_AUTO_UPGRADE**                 |                                             Enable auto upgrading (True / False)                                             |
+|               **DRAW_RANDOM_X_DIAPOSON**                |                      Range of pixels on the x-axis, randomly on which it will draw (default - [0,100])                       |
+|               **DRAW_RANDOM_Y_DIAPOSON**                |                      Range of pixels on the н-axis, randomly on which it will draw (default - [0,100])                       |
+|                 **DRAW_RANDOM_COLORS**                  |                     List of colors that will be randomly selected for painting  (default - ["#000000"])                      |
+|                     **ENABLE_SSL**                      | Enable verification of ssl certificates (sometimes it can help with SSL: CERTIFICATE_VERIFY_FAILED error)  (default - False) |
 
 ## Quick Start 📚
 

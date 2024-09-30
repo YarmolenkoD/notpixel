@@ -300,7 +300,18 @@ class Tapper:
 
                 boosts = data['boosts']
 
+                self.info(f"Boosts Levels: Energy Limit - <cyan>{boosts['energyLimit']}</cyan> ⚡️| Paint Reward - <light-green>{boosts['paintReward']}</light-green> 🔳 | Recharge Speed - <magenta>{boosts['reChargeSpeed']}</magenta> 🚀")
+
                 for name, level in sorted(boosts.items(), key=lambda item: item[1]):
+                    if name == 'energyLimit' and level >= settings.ENERGY_LIMIT_MAX:
+                        continue
+
+                    if name == 'paintReward' and level >= settings.PAINT_REWARD_MAX:
+                        continue
+
+                    if name == 'reChargeSpeed' and level >= settings.RE_CHARGE_SPEED_MAX:
+                        continue
+
                     if name not in settings.BOOSTS_BLACK_LIST:
                         try:
                             res = await http_client.get(f'https://notpx.app/api/v1/mining/boost/check/{name}', ssl=settings.ENABLE_SSL)
@@ -324,6 +335,10 @@ class Tapper:
         try:
             res = await http_client.get('https://notpx.app/api/v1/mining/status', ssl=settings.ENABLE_SSL)
 
+            await asyncio.sleep(delay=random.randint(1, 3))
+
+            user = await self.get_user_info(http_client=http_client)
+
             res.raise_for_status()
 
             data = await res.json()
@@ -331,6 +346,9 @@ class Tapper:
             tasks = data['tasks'].keys()
 
             for task in settings.TASKS_TODO_LIST:
+                if task == 'premium' and not 'isPremium' in user:
+                    continue
+
                 if task not in tasks:
                     if re.search(':', task) is not None:
                         split_str = task.split(':')
@@ -364,14 +382,14 @@ class Tapper:
                     status = data[task]
 
                     if status:
-                        self.success(f"Task requirements met. Task <cyan>{task}</cyan> completed")
+                        self.success(f"Task requirements met. Task <cyan>{task}</cyan> completed ✔")
 
                         current_balance = await self.get_balance(http_client=http_client)
 
                         if current_balance is None:
                             self.info(f"Current balance: Unknown 🔳")
                         else:
-                            self.info(f"Current balance: <light-green>{'{:,.3f}'.format(current_balance)}</light-green> 🔳")
+                            self.info(f"Balance: <light-green>{'{:,.3f}'.format(current_balance)}</light-green> 🔳")
                     else:
                         self.warning(f"Task requirements were not met <cyan>{task}</cyan>")
 
@@ -464,11 +482,13 @@ class Tapper:
 
                 if user is not None:
                     current_balance = await self.get_balance(http_client=http_client)
+                    repaints = user['repaints']
+                    league = user['league']
 
                     if current_balance is None:
                         self.info(f"Current balance: Unknown 🔳")
                     else:
-                        self.info(f"Current balance: <light-green>{'{:,.3f}'.format(current_balance)}</light-green> 🔳")
+                        self.info(f"Balance: <light-green>{'{:,.3f}'.format(current_balance)}</light-green> 🔳 | Repaints: <magenta>{'{:,.3f}'.format(repaints)}</magenta> 🎨️ | League: <cyan>{league.capitalize()}</cyan> 🏆")
 
                     if settings.ENABLE_AUTO_DRAW:
                         await self.draw(http_client=http_client)
