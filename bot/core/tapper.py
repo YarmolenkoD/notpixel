@@ -302,6 +302,9 @@ class Tapper:
 
                 self.info(f"Boosts Levels: Energy Limit - <cyan>{boosts['energyLimit']}</cyan> ⚡️| Paint Reward - <light-green>{boosts['paintReward']}</light-green> 🔳 | Recharge Speed - <magenta>{boosts['reChargeSpeed']}</magenta> 🚀")
 
+                if boosts['energyLimit'] >= settings.ENERGY_LIMIT_MAX and boosts['paintReward'] >= settings.PAINT_REWARD_MAX and boosts['reChargeSpeed'] >= settings.RE_CHARGE_SPEED_MAX:
+                    return
+
                 for name, level in sorted(boosts.items(), key=lambda item: item[1]):
                     if name == 'energyLimit' and level >= settings.ENERGY_LIMIT_MAX:
                         continue
@@ -488,7 +491,7 @@ class Tapper:
                     if current_balance is None:
                         self.info(f"Current balance: Unknown 🔳")
                     else:
-                        self.info(f"Balance: <light-green>{'{:,.3f}'.format(current_balance)}</light-green> 🔳 | Repaints: <magenta>{'{:,.3f}'.format(repaints)}</magenta> 🎨️ | League: <cyan>{league.capitalize()}</cyan> 🏆")
+                        self.info(f"Balance: <light-green>{'{:,.3f}'.format(current_balance)}</light-green> 🔳 | Repaints: <magenta>{repaints}</magenta> 🎨️ | League: <cyan>{league.capitalize()}</cyan> 🏆")
 
                     if settings.ENABLE_AUTO_DRAW:
                         await self.draw(http_client=http_client)
