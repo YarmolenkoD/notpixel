@@ -3,6 +3,7 @@ from dateutil import parser
 from time import time
 from urllib.parse import unquote, quote
 import re
+from copy import deepcopy
 
 from json import dump as dp, loads as ld
 from aiocfscrape import CloudflareScraper
@@ -24,7 +25,7 @@ import aiohttp
 import json
 
 from .agents import generate_random_user_agent
-from .headers import headers
+from .headers import headers, headers_notcoin
 from .helper import format_duration
 
 from bot.config import settings
@@ -47,10 +48,12 @@ class Tapper:
         self.peer = None
         self.first_run = None
         self.game_service_is_unavailable = False
+        self.already_joined_squad_channel = None
 
         self.session_ug_dict = self.load_user_agents() or []
 
         headers['User-Agent'] = self.check_user_agent()
+        headers_notcoin['User-Agent'] = headers['User-Agent']
 
     async def generate_random_user_agent(self):
         return generate_random_user_agent(device_type='android', browser_type='chrome')
@@ -205,6 +208,68 @@ class Tapper:
         except Exception as error:
             self.error(
                 f"Unknown error during Authorization: <light-yellow>{error}</light-yellow>")
+            await asyncio.sleep(delay=3)
+
+    async def get_tg_web_data_not(self, proxy: str | None) -> str:
+        if proxy:
+            proxy = Proxy.from_str(proxy)
+            proxy_dict = dict(
+                scheme=proxy.protocol,
+                hostname=proxy.host,
+                port=proxy.port,
+                username=proxy.login,
+                password=proxy.password
+            )
+        else:
+            proxy_dict = None
+
+        self.tg_client.proxy = proxy_dict
+
+        try:
+            with_tg = True
+
+            if not self.tg_client.is_connected:
+                with_tg = False
+                try:
+                    await self.tg_client.connect()
+                except (Unauthorized, UserDeactivated, AuthKeyUnregistered):
+                    raise InvalidSession(self.session_name)
+
+            while True:
+                try:
+                    peer = await self.tg_client.resolve_peer('notgames_bot')
+                    break
+                except FloodWait as fl:
+                    fls = fl.value
+
+                    self.warning(f"FloodWait {fl}")
+                    self.info(f"Sleep {fls}s")
+
+                    await asyncio.sleep(fls + 3)
+
+            InputBotApp = types.InputBotAppShortName(bot_id=peer, short_name="squads")
+
+            web_view = await self.tg_client.invoke(RequestAppWebView(
+                peer=peer,
+                app=InputBotApp,
+                platform='android',
+                write_allowed=True,
+            ))
+
+            auth_url = web_view.url
+            tg_web_data = unquote(
+                string=auth_url.split('tgWebAppData=', maxsplit=1)[1].split('&tgWebAppVersion', maxsplit=1)[0])
+
+            if with_tg is False:
+                await self.tg_client.disconnect()
+
+            return tg_web_data
+
+        except InvalidSession as error:
+            raise error
+
+        except Exception as error:
+            self.error(f"Unknown error during getting web data for squads: <light-yellow>{error}</light-yellow>")
             await asyncio.sleep(delay=3)
 
     async def check_proxy(self, http_client: aiohttp.ClientSession, proxy: Proxy) -> None:
@@ -439,6 +504,79 @@ class Tapper:
 
             await asyncio.sleep(delay=3)
 
+    async def join_squad(self, http_client=aiohttp.ClientSession, user={}):
+        try:
+            current_squad_slug = user['squad']['slug']
+
+            if settings.ENABLE_AUTO_JOIN_TO_SQUAD_CHANNEL and settings.SQUAD_SLUG and current_squad_slug != settings.SQUAD_SLUG:
+                try:
+                    if self.already_joined_squad_channel != settings.SQUAD_SLUG:
+                        if not self.tg_client.is_connected:
+                            await self.tg_client.connect()
+                            await asyncio.sleep(delay=2)
+
+                        res = await self.tg_client.join_chat(settings.SQUAD_SLUG)
+
+                        if res:
+                            self.success(f"Successfully joined to squad channel: <magenta>{settings.SQUAD_SLUG}</magenta>")
+
+                        self.already_joined_squad_channel = settings.SQUAD_SLUG
+
+                        await asyncio.sleep(delay=2)
+
+                        if self.tg_client.is_connected:
+                            await self.tg_client.disconnect()
+
+                except Exception as error:
+                    self.error(f"Unknown error when joining squad channel <cyan>{settings.SQUAD_SLUG}</cyan>: <light-yellow>{error}</light-yellow>")
+
+                squad = settings.SQUAD_SLUG
+                local_headers = deepcopy(headers_notcoin)
+
+                local_headers['X-Auth-Token'] = "Bearer null"
+
+                response = await http_client.post(
+                   'https://api.notcoin.tg/auth/login',
+                    headers=local_headers,
+                    json={"webAppData": self.tg_web_data_not}
+                )
+
+                response.raise_for_status()
+
+                text_data = await response.text()
+
+                json_data = json.loads(text_data)
+
+                accessToken = json_data.get("data", {}).get("accessToken", None)
+
+                if not accessToken:
+                    self.warning(f"Error during join squads: can't get an authentication token to enter to the squad")
+                    return
+
+                local_headers['X-Auth-Token'] = f'Bearer {accessToken}'
+                info_response = await http_client.get(
+                    url=f'https://api.notcoin.tg/squads/by/slug/{squad}',
+                    headers=local_headers
+                )
+
+                info_json = await info_response.json()
+                chat_id = info_json['data']['squad']['chatId']
+
+                join_response = await http_client.post(
+                    f'https://api.notcoin.tg/squads/{squad}/join',
+                    headers=local_headers,
+                    json={'chatId': chat_id}
+                )
+
+                if join_response.status in [200, 201]:
+                    self.success(f"Successfully joined squad: <magenta>{squad}</magenta>")
+                else:
+                    self.warning(f"Something went wrong when joining squad: <magenta>{squad}</magenta>")
+        except Exception as error:
+            self.error(f"Unknown error when joining squad: <light-yellow>{error}</light-yellow>")
+
+            await asyncio.sleep(delay=3)
+
     async def run(self, proxy: str | None) -> None:
         if settings.USE_RANDOM_DELAY_IN_RUN:
             random_delay = random.randint(settings.RANDOM_DELAY_IN_RUN[0], settings.RANDOM_DELAY_IN_RUN[1])
@@ -468,9 +606,10 @@ class Tapper:
                     if "Authorization" in http_client.headers:
                         del http_client.headers["Authorization"]
 
-                    tg_web_data = await self.get_tg_web_data(proxy=proxy)
+                    self.tg_web_data = await self.get_tg_web_data(proxy=proxy)
+                    self.tg_web_data_not = await self.get_tg_web_data_not(proxy=proxy)
 
-                    http_client.headers['Authorization'] = f"initData {tg_web_data}"
+                    http_client.headers['Authorization'] = f"initData {self.tg_web_data}"
 
                     access_token_created_time = time()
                     token_live_time = random.randint(500, 900)
@@ -502,6 +641,9 @@ class Tapper:
                         self.info(f"Current balance: Unknown 🔳")
                     else:
                         self.info(f"Balance: <light-green>{'{:,.3f}'.format(current_balance)}</light-green> 🔳 | Repaints: <magenta>{repaints}</magenta> 🎨️ | League: <cyan>{league.capitalize()}</cyan> 🏆")
+
+                    if settings.ENABLE_AUTO_JOIN_TO_SQUAD:
+                        await self.join_squad(http_client=http_client, user=user)
 
                     if settings.ENABLE_AUTO_DRAW:
                         await self.draw(http_client=http_client)

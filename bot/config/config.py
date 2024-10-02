@@ -15,12 +15,16 @@ class Settings(BaseSettings):
 
     SLEEP_TIME_IN_MINUTES: list[int] = [30, 60]
 
-    ENABLE_AUTO_TASKS: bool = False
+    ENABLE_AUTO_TASKS: bool = True
     ENABLE_AUTO_DRAW: bool = True
     ENABLE_JOIN_TG_CHANNELS: bool = False
     ENABLE_CLAIM_REWARD: bool = True
     ENABLE_AUTO_UPGRADE: bool = True
 
+    ENABLE_AUTO_JOIN_TO_SQUAD: bool = True
+    SQUAD_SLUG: str = 'notpixel_raiders'
+
+    ENABLE_AUTO_JOIN_TO_SQUAD_CHANNEL: bool = True
     ENABLE_AUTO_JOIN_SQUAD: bool = True
     SQUAD_NAME: str = ''
 
