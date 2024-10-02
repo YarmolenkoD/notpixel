@@ -6,7 +6,7 @@
 
 # 🎨AUTO FARM FOR NOTPIXEL 🎨
 
-> [!ATTENTION]
+> [!WARNING]
 > As a payment for this script I take a part of your referrals, to remove this behavior or reduce the percentage of referrals you can customize this variable PERCENT_OF_REFERRALS_FOR_CREATORS_OF_THE_SOFT.
 
 > [!WARNING]
