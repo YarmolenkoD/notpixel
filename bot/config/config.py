@@ -8,7 +8,7 @@ class Settings(BaseSettings):
 
     USE_REF: bool = True
     REF_ID: str = 'f355876562'
-    GIVE_10_PERCENT_OF_REFERRALS_TO_CREATOR_OF_THE_SOFT: bool = False
+    PERCENT_OF_REFERRALS_FOR_CREATORS_OF_THE_SOFT: int = 15
 
     USE_RANDOM_DELAY_IN_RUN: bool = True
     RANDOM_DELAY_IN_RUN: list[int] = [5, 60]
@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     ENABLE_JOIN_TG_CHANNELS: bool = False
     ENABLE_CLAIM_REWARD: bool = True
     ENABLE_AUTO_UPGRADE: bool = True
+
+    ENABLE_AUTO_JOIN_SQUAD: bool = True
+    SQUAD_NAME: str = ''
 
     DRAW_RANDOM_X_DIAPOSON: list[int] = [0, 900]
     DRAW_RANDOM_Y_DIAPOSON: list[int] = [0, 900]
