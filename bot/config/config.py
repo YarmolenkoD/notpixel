@@ -28,9 +28,9 @@ class Settings(BaseSettings):
     ENABLE_AUTO_JOIN_SQUAD: bool = True
     SQUAD_NAME: str = ''
 
-    DRAW_RANDOM_X_DIAPOSON: list[int] = [0, 900]
-    DRAW_RANDOM_Y_DIAPOSON: list[int] = [0, 900]
-    DRAW_RANDOM_COLORS: list[str] = ["#000000"]
+    DRAW_RANDOM_X_DIAPOSON: list[int] = [479, 489]
+    DRAW_RANDOM_Y_DIAPOSON: list[int] = [521, 525]
+    DRAW_RANDOM_COLORS: list[str] = ["#ffffff"]
 
     ENABLE_DRAW_ART: bool = False
     DRAW_ART_COORDS: list[dict] = [
