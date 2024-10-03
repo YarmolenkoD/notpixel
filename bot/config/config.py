@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     ENABLE_AUTO_JOIN_TO_SQUAD: bool = True
     SQUAD_SLUG: str = 'notpixel_raiders'
 
-    ENABLE_AUTO_JOIN_TO_SQUAD_CHANNEL: bool = True
+    ENABLE_AUTO_JOIN_TO_SQUAD_CHANNEL: bool = False
     ENABLE_AUTO_JOIN_SQUAD: bool = True
     SQUAD_NAME: str = ''
 
