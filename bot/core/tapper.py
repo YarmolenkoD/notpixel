@@ -180,7 +180,7 @@ class Tapper:
                 platform='android',
                 write_allowed=True,
                 start_param=self.start_param
-            ), self)
+            ))
 
             auth_url = web_view.url
 
@@ -203,7 +203,8 @@ class Tapper:
             return tg_web_data
 
         except InvalidSession as error:
-            raise error
+            self.error(f"Session error during Authorization: <light-yellow>{error}</light-yellow>")
+            await asyncio.sleep(delay=10)
 
         except Exception as error:
             self.error(
@@ -271,6 +272,28 @@ class Tapper:
         except Exception as error:
             self.error(f"Unknown error during getting web data for squads: <light-yellow>{error}</light-yellow>")
             await asyncio.sleep(delay=3)
+
+    def is_night_time(self):
+        night_start = settings.NIGHT_TIME[0]
+        night_end = settings.NIGHT_TIME[1]
+
+        # Get the current hour
+        current_hour = datetime.now().hour
+
+        if current_hour >= night_start or current_hour < night_end:
+            return True
+
+        return False
+
+    def time_until_morning(self):
+        morning_time = datetime.now().replace(hour=6, minute=0, second=0, microsecond=0)
+
+        if datetime.now() >= morning_time:
+            morning_time += timedelta(days=1)
+
+        time_remaining = morning_time - datetime.now()
+
+        return time_remaining.total_seconds() / 60
 
     async def check_proxy(self, http_client: aiohttp.ClientSession, proxy: Proxy) -> None:
         try:
@@ -664,6 +687,15 @@ class Tapper:
                 sleep_time = random.randint(settings.SLEEP_TIME_IN_MINUTES[0], settings.SLEEP_TIME_IN_MINUTES[1])
 
                 self.info(f"sleep {sleep_time} minutes between cycles 💤")
+
+                is_night = False
+
+                if settings.DISABLE_IN_NIGHT:
+                    is_night = self.is_night_time()
+
+                if is_night:
+                    end_night_time = settings.NIGHT_TIME[1]
+                    sleep_time = self.time_until_morning()
 
                 await asyncio.sleep(delay=sleep_time*60)
 

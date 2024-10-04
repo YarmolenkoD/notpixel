@@ -21,12 +21,12 @@ class Settings(BaseSettings):
     ENABLE_CLAIM_REWARD: bool = True
     ENABLE_AUTO_UPGRADE: bool = True
 
+    ENABLE_AUTO_JOIN_TO_SQUAD_CHANNEL: bool = False
     ENABLE_AUTO_JOIN_TO_SQUAD: bool = True
     SQUAD_SLUG: str = 'notpixel_raiders'
 
-    ENABLE_AUTO_JOIN_TO_SQUAD_CHANNEL: bool = False
-    ENABLE_AUTO_JOIN_SQUAD: bool = True
-    SQUAD_NAME: str = ''
+    DISABLE_IN_NIGHT: bool = False
+    NIGHT_TIME: list[int] = [23, 6]
 
     DRAW_RANDOM_X_DIAPOSON: list[int] = [479, 489]
     DRAW_RANDOM_Y_DIAPOSON: list[int] = [521, 525]
@@ -48,7 +48,8 @@ class Settings(BaseSettings):
     RE_CHARGE_SPEED_MAX: int = 5 # max is 11
 
     BOOSTS_BLACK_LIST: list[str] = ['invite3frens', 'INVITE_FRIENDS', 'TON_TRANSACTION', 'BOOST_CHANNEL', 'ACTIVITY_CHALLENGE', 'CONNECT_WALLET']
-    TASKS_TODO_LIST: list[str] = ["x:notcoin", "x:notpixel", "paint20pixels", "leagueBonusSilver", "leagueBonusGold", "leagueBonusPlatinum", "channel:notpixel_channel", "channel:notcoin", "premium"]
+#     TASKS_TODO_LIST: list[str] = ["x:notcoin", "x:notpixel", "paint20pixels", "leagueBonusSilver", "leagueBonusGold", "leagueBonusPlatinum", "channel:notpixel_channel", "channel:notcoin", "premium"]
+    TASKS_TODO_LIST: list[str] = ["x:notcoin", "x:notpixel", "paint20pixels", "leagueBonusSilver", "leagueBonusGold", "channel:notpixel_channel", "channel:notcoin"]
 
     USE_PROXY_FROM_FILE: bool = True
 
