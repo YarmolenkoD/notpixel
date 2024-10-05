@@ -303,17 +303,29 @@ class Tapper:
         except Exception as error:
             self.error(f"Proxy: {proxy} | Error: {error}")
 
-    async def get_user_info(self, http_client: aiohttp.ClientSession):
-        try:
-            response = await http_client.get("https://notpx.app/api/v1/users/me", ssl=settings.ENABLE_SSL)
+    async def get_user_info(self, http_client: aiohttp.ClientSession, show_error_message: bool):
+        ssl = settings.ENABLE_SSL
+        err = None
 
-            response.raise_for_status()
+        for _ in range(2):
+            try:
+                response = await http_client.get("https://notpx.app/api/v1/users/me", ssl=ssl)
 
-            data = await response.json()
+                response.raise_for_status()
 
-            return data
-        except Exception as error:
-            self.error(f"{self.session_name} | Unknown error during get user info: <light-yellow>{error}</light-yellow>")
+                data = await response.json()
+
+                err = None
+
+                return data
+            except Exception as error:
+                ssl = not ssl
+                self.info(f"First get user info request not always successful, retrying..")
+                err = error
+                continue
+
+        if err != None and show_error_message == True:
+            self.error(f"Unknown error during get user info: <light-yellow>{err}</light-yellow>")
             return None
 
     async def get_balance(self, http_client: aiohttp.ClientSession):
@@ -438,7 +450,7 @@ class Tapper:
 
             await asyncio.sleep(delay=random.randint(1, 3))
 
-            user = await self.get_user_info(http_client=http_client)
+            user = await self.get_user_info(http_client=http_client, show_error_message=False)
 
             res.raise_for_status()
 
@@ -447,7 +459,7 @@ class Tapper:
             tasks = data['tasks'].keys()
 
             for task in settings.TASKS_TODO_LIST:
-                if task == 'premium' and not 'isPremium' in user:
+                if user != None and task == 'premium' and not 'isPremium' in user:
                     continue
 
                 if task not in tasks:
@@ -651,7 +663,7 @@ class Tapper:
                 break
 
             try:
-                user = await self.get_user_info(http_client=http_client)
+                user = await self.get_user_info(http_client=http_client, show_error_message=True)
 
                 await asyncio.sleep(delay=2)
 
