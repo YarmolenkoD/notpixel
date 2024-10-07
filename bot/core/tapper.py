@@ -287,7 +287,7 @@ class Tapper:
         return False
 
     def time_until_morning(self):
-        morning_time = datetime.now().replace(hour=6, minute=0, second=0, microsecond=0)
+        morning_time = datetime.now().replace(hour=settings.NIGHT_TIME[1], minute=0, second=0, microsecond=0)
 
         if datetime.now() >= morning_time:
             morning_time += timedelta(days=1)
@@ -715,7 +715,6 @@ class Tapper:
                     is_night = self.is_night_time()
 
                 if is_night:
-                    end_night_time = settings.NIGHT_TIME[1]
                     sleep_time = self.time_until_morning()
 
                 await asyncio.sleep(delay=sleep_time*60)
