@@ -49,6 +49,7 @@ class Tapper:
         self.first_run = None
         self.game_service_is_unavailable = False
         self.already_joined_squad_channel = None
+        self.user = None
 
         self.session_ug_dict = self.load_user_agents() or []
 
@@ -450,8 +451,6 @@ class Tapper:
 
             await asyncio.sleep(delay=random.randint(1, 3))
 
-            user = await self.get_user_info(http_client=http_client, show_error_message=False)
-
             res.raise_for_status()
 
             data = await res.json()
@@ -459,7 +458,7 @@ class Tapper:
             tasks = data['tasks'].keys()
 
             for task in settings.TASKS_TODO_LIST:
-                if user != None and task == 'premium' and not 'isPremium' in user:
+                if self.user != None and task == 'premium' and not 'isPremium' in self.user:
                     continue
 
                 if task not in tasks:
@@ -668,6 +667,7 @@ class Tapper:
                 await asyncio.sleep(delay=2)
 
                 if user is not None:
+                    self.user = user
                     current_balance = await self.get_balance(http_client=http_client)
                     repaints = user['repaints']
                     league = user['league']
