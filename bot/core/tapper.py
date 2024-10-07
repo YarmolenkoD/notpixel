@@ -461,6 +461,15 @@ class Tapper:
                 if self.user != None and task == 'premium' and not 'isPremium' in self.user:
                     continue
 
+                if self.user != None and task == 'leagueBonusSilver' and user['repaints'] < 9:
+                    continue
+
+                if self.user != None and task == 'leagueBonusGold' and user['repaints'] < 129:
+                    continue
+
+                if self.user != None and task == 'leagueBonusPlatinum' and user['repaints'] < 2049:
+                    continue
+
                 if task not in tasks:
                     if re.search(':', task) is not None:
                         split_str = task.split(':')
