@@ -477,20 +477,21 @@ class Tapper:
                         name = split_str[1]
 
                         if social == 'channel' and settings.ENABLE_JOIN_TG_CHANNELS:
-                            try:
-                                if not self.tg_client.is_connected:
-                                    await self.tg_client.connect()
-                                await asyncio.sleep(delay=random.randint(2, 3))
-                                await self.tg_client.join_chat(name)
-                                await self.tg_client.disconnect()
-                                await asyncio.sleep(delay=random.randint(3, 5))
-                                self.success(f"Successfully joined to the <cyan>{name}</cyan> channel ✔️")
-                            except Exception as error:
-                                self.error(f"Unknown error during joining to {name} channel: <light-yellow>{error}</light-yellow>")
-                            finally:
-                                # Disconnect the client only if necessary, for instance, when the entire task is done
-                                if self.tg_client.is_connected:
-                                    await self.tg_client.disconnect()
+                            continue
+#                             try:
+#                                 if not self.tg_client.is_connected:
+#                                     await self.tg_client.connect()
+#                                 await asyncio.sleep(delay=random.randint(2, 3))
+#                                 await self.tg_client.join_chat(name)
+#                                 await self.tg_client.disconnect()
+#                                 await asyncio.sleep(delay=random.randint(3, 5))
+#                                 self.success(f"Successfully joined to the <cyan>{name}</cyan> channel ✔️")
+#                             except Exception as error:
+#                                 self.error(f"Unknown error during joining to {name} channel: <light-yellow>{error}</light-yellow>")
+#                             finally:
+#                                 # Disconnect the client only if necessary, for instance, when the entire task is done
+#                                 if self.tg_client.is_connected:
+#                                     await self.tg_client.disconnect()
 
                         response = await http_client.get(f'https://notpx.app/api/v1/mining/task/check/{social}?name={name}', ssl=settings.ENABLE_SSL)
                     else:
