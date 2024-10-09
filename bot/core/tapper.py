@@ -4,6 +4,8 @@ from time import time
 from urllib.parse import unquote, quote
 import re
 from copy import deepcopy
+from PIL import Image
+import io
 
 from json import dump as dp, loads as ld
 from aiocfscrape import CloudflareScraper
@@ -361,6 +363,92 @@ class Tapper:
             await asyncio.sleep(delay=3)
             return None
 
+    async def compare_images(self, base_image, overlay_image, x_offset, y_offset):
+        changes = []
+        for x in range(overlay_image.width):
+            for y in range(overlay_image.height):
+                base_pixel = base_image.getpixel((x + x_offset, y + y_offset))
+                overlay_pixel = overlay_image.getpixel((x, y))
+                if base_pixel != overlay_pixel:
+                    changes.append((x + x_offset, y + y_offset, overlay_pixel))
+        return changes
+
+    async def get_image(self, http_client, url):
+        try:
+            async with http_client.get(url) as response:
+                if response.status == 200:
+                    img_data = await response.read()
+                    img = Image.open(io.BytesIO(img_data))
+                    return img
+                else:
+                    raise Exception(f"Failed to download image from {url}, status: {response.status}")
+        except Exception as error:
+            self.error(f"Error during loading image: {error}")
+            return None
+
+    async def draw_x3(self, http_client: aiohttp.ClientSession):
+        try:
+            response = await http_client.get('https://notpx.app/api/v1/mining/status', ssl=settings.ENABLE_SSL)
+
+            response.raise_for_status()
+
+            data = await response.json()
+
+            charges = data['charges']
+
+            if charges > 0:
+                self.info(f"Energy: <cyan>{charges}</cyan> ⚡️")
+            else:
+                self.info(f"No energy ⚡️")
+                return None
+
+            base_image_url = 'https://image.notpx.app/api/v2/image'
+            overlay_image_url = 'https://app.notpx.app/assets/worldtemplate2-B7WvoJMz.png'
+
+            x_offset = 372 # initial Y coords of world template image
+            y_offset = 372 # initial Y coords of world template image
+
+            base_image = await self.get_image(http_client, base_image_url)
+            overlay_image = await self.get_image(http_client, overlay_image_url)
+
+            updates = None
+            if base_image and overlay_image:
+                updates = await self.compare_images(base_image, overlay_image, x_offset, y_offset)
+
+            if updates == None:
+                return None
+
+            for _ in range(charges):
+                update = random.choice(updates)
+                x, y, rgb = update
+
+                color = '#{:02x}{:02x}{:02x}'.format(*rgb)
+
+                pixelId = int(f'{y}{x}')+1
+
+                payload = {
+                    "pixelId": pixelId,
+                    "newColor": color
+                }
+
+                draw_request = await http_client.post(
+                    'https://notpx.app/api/v1/repaint/start',
+                    json=payload,
+                    ssl=settings.ENABLE_SSL
+                )
+
+                draw_request.raise_for_status()
+
+                data = await draw_request.json()
+
+                self.success(f"Painted (X: <cyan>{x}</cyan>, Y: <cyan>{y}</cyan>) with color <light-blue>{color}</light-blue> 🎨️ | Balance <light-green>{'{:,.3f}'.format(data.get('balance', 'unknown'))}</light-green> 🔳")
+
+                await asyncio.sleep(delay=random.randint(5, 10))
+
+        except Exception as error:
+            self.error(f"Unknown error during painting: <light-yellow>{error}</light-yellow>")
+            await asyncio.sleep(delay=3)
+
     async def draw(self, http_client: aiohttp.ClientSession):
         try:
             response = await http_client.get('https://notpx.app/api/v1/mining/status', ssl=settings.ENABLE_SSL)
@@ -398,23 +486,23 @@ class Tapper:
 
                     color = random.choice(settings.DRAW_RANDOM_COLORS)
 
-                start_x_cord =   settings.DRAW_RANDOM_X_DIAPOSON[0]
-                end_x_cord =   settings.DRAW_RANDOM_X_DIAPOSON[1]
-                start_y_cord =   settings.DRAW_RANDOM_Y_DIAPOSON[0]
-                end_y_cord =   settings.DRAW_RANDOM_Y_DIAPOSON[1]
-
-                found = False
-
                 pixelId = int(f'{y}{x}')+1
 
-                for curr_x in range(start_x_cord, end_x_cord):
-                    if found:
-                        break
-                    for curr_y in range(start_y_cord, end_x_cord):
-                        if self.updated_pixels.get(f"{pixelId}") != color:
-                            x = curr_x
-                            y = curr_y
-                            found = True
+#                 start_x_cord =   settings.DRAW_RANDOM_X_DIAPOSON[0]
+#                 end_x_cord =   settings.DRAW_RANDOM_X_DIAPOSON[1]
+#                 start_y_cord =   settings.DRAW_RANDOM_Y_DIAPOSON[0]
+#                 end_y_cord =   settings.DRAW_RANDOM_Y_DIAPOSON[1]
+#
+#                 found = False
+#
+#                 for curr_x in range(start_x_cord, end_x_cord):
+#                     if found:
+#                         break
+#                     for curr_y in range(start_y_cord, end_x_cord):
+#                         if self.updated_pixels.get(f"{pixelId}") != color:
+#                             x = curr_x
+#                             y = curr_y
+#                             found = True
 
                 payload = {
                     "pixelId": pixelId,
@@ -783,6 +871,7 @@ class Tapper:
 
                     if settings.ENABLE_AUTO_DRAW:
                         await self.draw(http_client=http_client)
+#                         await self.draw_x3(http_client=http_client)
 
                     if settings.ENABLE_AUTO_UPGRADE:
                         status = await self.upgrade(http_client=http_client)
