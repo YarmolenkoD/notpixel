@@ -17,6 +17,7 @@ idna==3.6
 Js2Py==0.74
 loguru==0.7.2
 multidict==6.0.5
+pillow==10.4.0
 pyaes==1.6.1
 pycryptodome==3.20.0
 pydantic==2.6.4

@@ -19,7 +19,7 @@
 ## MY OTHER BOTS
 
 ### 💩 [Boinkers](https://github.com/YarmolenkoD/boinkers)
-### 🚀 [Moonbix](https://github.com/YarmolenkoD/moonbix)
+### 🚀 [Moonbix](https://github.com/YarmolenkoD/moonbix) [NOT WORKING]
 
 ## Recommendation before use
 
