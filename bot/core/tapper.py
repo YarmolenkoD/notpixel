@@ -329,6 +329,20 @@ class Tapper:
             self.error(f"Unknown error during get user info: <light-yellow>{err}</light-yellow>")
             return None
 
+    async def get_status(self, http_client: aiohttp.ClientSession):
+        try:
+            response = await http_client.get('https://notpx.app/api/v1/mining/status', ssl=settings.ENABLE_SSL)
+
+            response.raise_for_status()
+
+            data = await response.json()
+
+            return data
+        except Exception as error:
+            self.error(f"Unknown error during processing status: <light-yellow>{error}</light-yellow>")
+            await asyncio.sleep(delay=3)
+            return None
+
     async def get_balance(self, http_client: aiohttp.ClientSession):
         try:
             response = await http_client.get('https://notpx.app/api/v1/mining/status', ssl=settings.ENABLE_SSL)
@@ -708,8 +722,6 @@ class Tapper:
 
                 sleep_time = random.randint(settings.SLEEP_TIME_IN_MINUTES[0], settings.SLEEP_TIME_IN_MINUTES[1])
 
-                self.info(f"sleep {sleep_time} minutes between cycles 💤")
-
                 is_night = False
 
                 if settings.DISABLE_IN_NIGHT:
@@ -717,6 +729,12 @@ class Tapper:
 
                 if is_night:
                     sleep_time = self.time_until_morning()
+
+                if is_night:
+                    self.info(f"sleep {int(sleep_time)} minutes to the morning ({settings.NIGHT_TIME[1]} hours) 💤")
+                else:
+                    self.info(f"sleep {int(sleep_time)} minutes between cycles 💤")
+
 
                 await asyncio.sleep(delay=sleep_time*60)
 

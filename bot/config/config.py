@@ -28,9 +28,9 @@ class Settings(BaseSettings):
     DISABLE_IN_NIGHT: bool = False
     NIGHT_TIME: list[int] = [23, 6]
 
-    DRAW_RANDOM_X_DIAPOSON: list[int] = [479, 489]
-    DRAW_RANDOM_Y_DIAPOSON: list[int] = [521, 525]
-    DRAW_RANDOM_COLORS: list[str] = ["#ffffff"]
+    DRAW_RANDOM_X_DIAPOSON: list[int] = [480, 510]
+    DRAW_RANDOM_Y_DIAPOSON: list[int] = [480, 500]
+    DRAW_RANDOM_COLORS: list[str] = ["#000000"]
 
     ENABLE_DRAW_ART: bool = False
     DRAW_ART_COORDS: list[dict] = [
