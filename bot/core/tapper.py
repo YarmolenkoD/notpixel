@@ -14,6 +14,7 @@ from pyrogram.errors import Unauthorized, UserDeactivated, AuthKeyUnregistered, 
 from pyrogram.raw.functions.messages import RequestAppWebView
 from pyrogram.raw import types
 
+import websockets
 import asyncio
 import random
 import string
@@ -50,6 +51,9 @@ class Tapper:
         self.game_service_is_unavailable = False
         self.already_joined_squad_channel = None
         self.user = None
+        self.updated_pixels = {}
+        self.socket = None
+        self.socket_task = None
 
         self.session_ug_dict = self.load_user_agents() or []
 
@@ -394,8 +398,26 @@ class Tapper:
 
                     color = random.choice(settings.DRAW_RANDOM_COLORS)
 
+                start_x_cord =   settings.DRAW_RANDOM_X_DIAPOSON[0]
+                end_x_cord =   settings.DRAW_RANDOM_X_DIAPOSON[1]
+                start_y_cord =   settings.DRAW_RANDOM_Y_DIAPOSON[0]
+                end_y_cord =   settings.DRAW_RANDOM_Y_DIAPOSON[1]
+
+                found = False
+
+                pixelId = int(f'{y}{x}')+1
+
+                for curr_x in range(start_x_cord, end_x_cord):
+                    if found:
+                        break
+                    for curr_y in range(start_y_cord, end_x_cord):
+                        if self.updated_pixels.get(f"{pixelId}") != color:
+                            x = curr_x
+                            y = curr_y
+                            found = True
+
                 payload = {
-                    "pixelId": int(f"{y}{x}")+1,
+                    "pixelId": pixelId,
                     "newColor": color
                 }
 
@@ -407,7 +429,9 @@ class Tapper:
 
                 draw_request.raise_for_status()
 
-                self.success(f"Painted (X: <cyan>{x}</cyan>, Y: <cyan>{y}</cyan>) with color <light-blue>{color}</light-blue> 🎨️")
+                data = await draw_request.json()
+
+                self.success(f"Painted (X: <cyan>{x}</cyan>, Y: <cyan>{y}</cyan>) with color <light-blue>{color}</light-blue> 🎨️ | Balance <light-green>{'{:,.3f}'.format(data.get('balance', 'unknown'))}</light-green> 🔳")
 
                 await asyncio.sleep(delay=random.randint(5, 10))
         except Exception as error:
@@ -635,6 +659,53 @@ class Tapper:
 
             await asyncio.sleep(delay=3)
 
+    async def connect_websocket(self, http_client: aiohttp.ClientSession):
+        if self.socket == None:
+            return None
+
+        try:
+            subscribe_message = json.dumps({
+                "action": "subscribe",
+                "channel": "imageUpdates"
+            })
+
+            await self.socket.send_str(subscribe_message)
+
+            async for message in self.socket:
+                if message.type == aiohttp.WSMsgType.TEXT:
+                    try:
+                        updates = message.data.split("\n")
+
+                        # Process each update
+                        for update in updates:
+                            match = re.match(r'pixelUpdate:(\d+):#([0-9A-Fa-f]{6})', update)
+                            if match:
+                                pixel_index = match.group(1)
+                                color = f"#{match.group(2)}"
+                                self.updated_pixels[pixel_index] = color
+                    except Exception as e:
+                        self.error(f"Error processing WebSocket message: {e}")
+
+        except Exception as e:
+            self.error(f"WebSocket connection error: {e}")
+            return None
+
+    async def create_socket_connection(self, http_client: aiohttp.ClientSession):
+        uri = "wss://notpx.app/api/v2/image/ws"
+
+        try:
+            socket = await http_client.ws_connect(uri)
+
+            self.socket = socket
+
+            self.info("WebSocket connected successfully")
+
+            return socket
+
+        except Exception as e:
+            self.error(f"WebSocket connection error: {e}")
+            return None
+
     async def run(self, proxy: str | None) -> None:
         if settings.USE_RANDOM_DELAY_IN_RUN:
             random_delay = random.randint(settings.RANDOM_DELAY_IN_RUN[0], settings.RANDOM_DELAY_IN_RUN[1])
@@ -691,6 +762,12 @@ class Tapper:
                 await asyncio.sleep(delay=2)
 
                 if user is not None:
+                    self.socket = await self.create_socket_connection(http_client=http_client)
+
+                    if self.socket_task is None or self.socket_task.done():
+                        self.socket_task = asyncio.create_task(self.connect_websocket(http_client=http_client))
+                        await asyncio.sleep(delay=5)
+
                     self.user = user
                     current_balance = await self.get_balance(http_client=http_client)
                     repaints = user['repaints']
@@ -735,6 +812,12 @@ class Tapper:
                 else:
                     self.info(f"sleep {int(sleep_time)} minutes between cycles 💤")
 
+                if self.socket != None:
+                    try:
+                        await self.socket.close()
+                        self.info(f"WebSocket closed successfully")
+                    except Exception as error:
+                        self.error(f"Unknown error during closing socket: <light-yellow>{error}</light-yellow>")
 
                 await asyncio.sleep(delay=sleep_time*60)
 
