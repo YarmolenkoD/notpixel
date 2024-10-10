@@ -373,7 +373,7 @@ class Tapper:
                 else:
                     raise Exception(f"Failed to download image from {url}, status: {response.status}")
         except Exception as error:
-            self.error(f"Error during loading image: {error}")
+            self.error(f"Error during loading image from url: {url} | Error: {error}")
             return None
 
     async def send_draw_request(self, http_client: aiohttp.ClientSession, update):
@@ -414,10 +414,10 @@ class Tapper:
                 self.info(f"No energy ⚡️")
                 return None
 
-            image_url = 'https://app.notpx.app/assets/worldtemplate2-B7WvoJMz.png'
+            image_url = 'https://app.notpx.app/assets/durovoriginal-CqJYkgok.png'
 
-            x_offset = 372 # initial Y coords of world template image
-            y_offset = 372 # initial Y coords of world template image
+            x_offset = 244 # initial Y coords of world template image
+            y_offset = 244 # initial Y coords of world template image
 
             image_headers = deepcopy(headers)
             image_headers['Host'] = 'app.notpx.app'
@@ -433,48 +433,43 @@ class Tapper:
 
             await self.socket.send_str(subscribe_message)
 
-            message_count = 0
+            while charges > 0:
+                await asyncio.sleep(delay=random.randint(4, 8))
 
-            async for message in self.socket:
-                if charges == 0:
-                    break
+                break_socket = False
 
-                message_count = message_count + 1
-                if message_count % 3 != 0: # skip some messages
-                    continue
+                async for message in self.socket:
+                    if break_socket:
+                        break
 
-                if message.type == aiohttp.WSMsgType.TEXT:
-                    try:
-                        updates = message.data.split("\n")
-                        available_count_to_update = 3
+                    if message.type == aiohttp.WSMsgType.TEXT:
+                        try:
+                            updates = message.data.split("\n")
 
-                        for update in updates:
-                            match = re.match(r'pixelUpdate:(\d+):#([0-9A-Fa-f]{6})', update)
+                            for update in updates:
+                                match = re.match(r'pixelUpdate:(\d+):#([0-9A-Fa-f]{6})', update)
 
-                            if match:
-                                pixel_index = match.group(1)
+                                if match:
+                                    pixel_index = match.group(1)
 
-                                if len(pixel_index) < 6:
-                                    continue
+                                    if len(pixel_index) < 6:
+                                        continue
 
-                                updated_y = int(str(pixel_index)[:3])
-                                updated_x = int(str(pixel_index)[3:]) - 1
-                                updated_pixel_color = f"#{match.group(2)}"
+                                    updated_y = int(str(pixel_index)[:3])
+                                    updated_x = int(str(pixel_index)[3:]) - 1
+                                    updated_pixel_color = f"#{match.group(2)}"
 
-                                if updated_x > 372 and updated_x < 620 and updated_y > 372 and updated_y < 620:
-                                   image_pixel = image.getpixel((updated_x - x_offset, updated_y - y_offset))
-                                   image_hex_color = '#{:02x}{:02x}{:02x}'.format(*image_pixel)
+                                    if updated_x > 244 and updated_x < 755 and updated_y > 244 and updated_y < 755:
+                                       image_pixel = image.getpixel((updated_x - x_offset, updated_y - y_offset))
+                                       image_hex_color = '#{:02x}{:02x}{:02x}'.format(*image_pixel)
 
-                                   if available_count_to_update == 0 or charges == 0:
-                                       break
-
-                                   if image_hex_color.upper() != updated_pixel_color.upper():
-                                       await self.send_draw_request(http_client=http_client, update=(updated_x, updated_y, image_hex_color.upper()))
-                                       charges = charges - 1
-                                       available_count_to_update = available_count_to_update - 1
-                                       break
-                    except Exception as e:
-                        self.error(f"Websocket error during painting (x3): {e}")
+                                       if image_hex_color.upper() != updated_pixel_color.upper():
+                                           await self.send_draw_request(http_client=http_client, update=(updated_x, updated_y, image_hex_color.upper()))
+                                           charges = charges - 1
+                                           break_socket = True
+                                           break
+                        except Exception as e:
+                            self.error(f"Websocket error during painting (x3): {e}")
         except Exception as error:
             self.warning(f"Unknown error during painting (x3): <light-yellow>{error}</light-yellow>")
             self.info(f"Start drawing without x3...")
@@ -835,7 +830,7 @@ class Tapper:
                         await self.join_squad(http_client=http_client, user=user)
 
                     if settings.ENABLE_AUTO_DRAW:
-                        if settings.ENABLE_EXPERIMENTAL_X3_MODE:
+                        if settings.ENABLE_EXPERIMENTAL_X3_MODE and self.socket:
                             await self.draw_x3(http_client=http_client)
                         else:
                             await self.draw(http_client=http_client)
