@@ -66,7 +66,7 @@
 |                  **SQUAD_SLUG**                   |                               Squad slug [telegram channel slug] (default - notpixel_raiders)                                |
 |               **DISABLE_IN_NIGHT**                |                                          Disable script in night (default - False)                                           |
 |                  **NIGHT_TIME**                   |                                          Night time [from, to] (default - [23, 6])                                           |
-|          **ENABLE_EXPERIMENTAL_X3_MODE**          |                                         Enable experimental X3 mode (default - True)                                         |
+|          **ENABLE_EXPERIMENTAL_X3_MODE**          |                                         Enable experimental X3 mode (default - False)                                         |
 
 ## Quick Start 📚
 

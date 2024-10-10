@@ -818,11 +818,8 @@ class Tapper:
                 await asyncio.sleep(delay=2)
 
                 if user is not None:
-                    self.socket = await self.create_socket_connection(http_client=http_client)
-
-#                     if self.socket_task is None or self.socket_task.done():
-#                         self.socket_task = asyncio.create_task(self.connect_websocket(http_client=http_client))
-#                         await asyncio.sleep(delay=5)
+                    if settings.ENABLE_EXPERIMENTAL_X3_MODE:
+                        self.socket = await self.create_socket_connection(http_client=http_client)
 
                     self.user = user
                     current_balance = await self.get_balance(http_client=http_client)
