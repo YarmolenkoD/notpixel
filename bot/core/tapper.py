@@ -590,7 +590,6 @@ class Tapper:
 
             while charges > 0:
                 try:
-
                     break_socket = False
 
                     message = await asyncio.wait_for(self.socket.receive(), timeout=random.choices([8.0, 9.0, 10.0, 11.0], weights=[25, 25, 25, 25])[0])
@@ -628,26 +627,26 @@ class Tapper:
                             self.current_user_balance = status_data['userBalance']
 
                         if tries > 0 and charges > 0:
-                            self.warning(f"Warning during painting <cyan>[X3 MODE]</cyan>: <magenta>Notpixel</magenta> server is not response. Retrying..")
+                            self.warning(f"Warning during painting <cyan>[TEMPLATE MODE]</cyan>: <magenta>Notpixel</magenta> server is not response. Retrying..")
                             tries = tries - 1
                             sleep_time = random.randint(10, 20)
                             self.info(f"Restart drawing in {round(sleep_time)} seconds...")
                             await asyncio.sleep(delay=sleep_time)
                             continue
                         else:
-                            self.warning(f"Warning during painting <cyan>[X3 MODE]</cyan>: <magenta>Notpixel</magenta> server is not response.")
+                            self.warning(f"Warning during painting <cyan>[TEMPLATE MODE]</cyan>: <magenta>Notpixel</magenta> server is not response.")
                             break
                     else:
-                        self.error(f"Unknown error during painting <cyan>[X3 MODE]</cyan>: {e}")
+                        self.error(f"Unknown error during painting <cyan>[TEMPLATE MODE]</cyan>: {e}")
                         break
         except Exception as error:
             if self.check_timeout_error(error):
-                self.warning(f"Warning during painting <cyan>[X3 MODE]</cyan>: <magenta>Notpixel</magenta> server is not response.")
+                self.warning(f"Warning during painting <cyan>[TEMPLATE MODE]</cyan>: <magenta>Notpixel</magenta> server is not response.")
             else:
                 if error:
-                    self.error(f"Unknown error during painting <cyan>[X3 MODE]</cyan>: <light-yellow>{error}</light-yellow>")
+                    self.error(f"Unknown error during painting <cyan>[TEMPLATE MODE]</cyan>: <light-yellow>{error}</light-yellow>")
                 else:
-                    self.error(f"Unknown error during painting <cyan>[X3 MODE]</cyan>.")
+                    self.error(f"Unknown error during painting <cyan>[TEMPLATE MODE]</cyan>.")
             await asyncio.sleep(delay=random.randint(2, 5))
 
     async def draw(self, http_client: aiohttp.ClientSession):
@@ -1051,13 +1050,13 @@ class Tapper:
                             curr_user_template = await self.get_user_current_template(http_client=http_client)
                             await asyncio.sleep(delay=random.randint(2, 5))
                             is_successfully_subscribed = True
-                            if not curr_user_template or curr_user_template.get('id', 0) != settings.CUSTOM_TEMPLATE_ID:
-                                is_successfully_subscribed = await self.subscribe_to_template(http_client=http_client, template_id=settings.CUSTOM_TEMPLATE_ID)
+                            if not curr_user_template or curr_user_template.get('id', 0) != custom_template_id:
+                                is_successfully_subscribed = await self.subscribe_to_template(http_client=http_client, template_id=custom_template_id)
                                 if is_successfully_subscribed:
-                                    self.success(f"Successfully subscribed to the template | ID: <cyan>{settings.CUSTOM_TEMPLATE_ID}</cyan>")
+                                    self.success(f"Successfully subscribed to the template | ID: <cyan>{custom_template_id}</cyan>")
                                 await asyncio.sleep(delay=random.randint(2, 5))
                             if is_successfully_subscribed:
-                                template_info_data = await self.get_template_info(http_client=http_client, template_id=settings.CUSTOM_TEMPLATE_ID)
+                                template_info_data = await self.get_template_info(http_client=http_client, template_id=custom_template_id)
                                 if template_info_data:
                                     await asyncio.sleep(delay=random.randint(2, 5))
                                     image_url = template_info_data['url']
