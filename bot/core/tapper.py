@@ -63,6 +63,7 @@ class Tapper:
         self.image_directory = './bot/assets/templates'
 
         self.session_ug_dict = self.load_user_agents() or []
+        self.templates = self.load_templates() or []
 
         headers['User-Agent'] = self.check_user_agent()
         headers_notcoin['User-Agent'] = headers['User-Agent']
@@ -125,6 +126,23 @@ class Tapper:
 
         except json.JSONDecodeError:
             logger.warning("User agents file is empty or corrupted.")
+
+        return []
+
+    def load_templates(self):
+        templates_list_file_name = "templates-list.json"
+
+        try:
+            with open(templates_list_file_name, 'r') as user_agents:
+                session_data = json.load(user_agents)
+                if isinstance(session_data, list):
+                    return session_data
+
+        except FileNotFoundError:
+            logger.warning("Templates list file not found, creating...")
+
+        except json.JSONDecodeError:
+            logger.warning("Templates list file is empty or corrupted.")
 
         return []
 
@@ -397,7 +415,6 @@ class Tapper:
                 # Open and return the image from file system
                 img = Image.open(image_filename)
                 img.load()  # Load the image data
-                print
                 return img
         except Exception as error:
             self.error(f"Failed to load image from file: {image_filename} | Error: {error}")
@@ -1022,7 +1039,15 @@ class Tapper:
                             'image': None
                         }
 
-                        if settings.ENABLE_DRAW_CUSTOM_TEMPLATE and settings.CUSTOM_TEMPLATE_ID:
+                        custom_template_id = None
+
+                        if settings.ENABLE_RANDOM_CUSTOM_TEMPLATE and len(self.templates) > 0:
+                            custom_template = random.choice(self.templates)
+                            custom_template_id = custom_template.get('templateId', settings.CUSTOM_TEMPLATE_ID)
+                        elif settings.CUSTOM_TEMPLATE_ID:
+                            custom_template_id = settings.CUSTOM_TEMPLATE_ID
+
+                        if settings.ENABLE_DRAW_CUSTOM_TEMPLATE and custom_template_id:
                             curr_user_template = await self.get_user_current_template(http_client=http_client)
                             await asyncio.sleep(delay=random.randint(2, 5))
                             is_successfully_subscribed = True
