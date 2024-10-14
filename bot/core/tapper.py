@@ -1040,7 +1040,7 @@ class Tapper:
                         }
 
                         if not self.custom_template_id and settings.ENABLE_RANDOM_CUSTOM_TEMPLATE and len(self.templates) > 0:
-                            self.custom_template = random.choice(self.templates)
+                            custom_template = random.choice(self.templates)
                             self.custom_template_id = custom_template.get('templateId', settings.CUSTOM_TEMPLATE_ID)
                         elif settings.CUSTOM_TEMPLATE_ID:
                             self.custom_template_id = settings.CUSTOM_TEMPLATE_ID
