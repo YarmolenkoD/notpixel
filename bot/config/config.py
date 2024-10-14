@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     DISABLE_IN_NIGHT: bool = False
     NIGHT_TIME: list[int] = [23, 6]
 
-    ENABLE_RANDOM_CUSTOM_TEMPLATE: bool = True
+    ENABLE_RANDOM_CUSTOM_TEMPLATE: bool = False
     ENABLE_DRAW_CUSTOM_TEMPLATE: bool = True
     CUSTOM_TEMPLATE_ID: int = 6914611412
 
