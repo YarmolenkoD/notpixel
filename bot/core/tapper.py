@@ -568,7 +568,7 @@ class Tapper:
             if status_data == None:
                 return None
 
-            if self.socket:
+            if not self.socket:
                 return None
 
             charges = status_data['charges']
