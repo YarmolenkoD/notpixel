@@ -61,6 +61,7 @@ class Tapper:
         self.current_user_balance = 0
         self.template_info = {}
         self.image_directory = './bot/assets/templates'
+        self.custom_template_id = None
 
         self.session_ug_dict = self.load_user_agents() or []
         self.templates = self.load_templates() or []
@@ -1038,25 +1039,23 @@ class Tapper:
                             'image': None
                         }
 
-                        custom_template_id = None
-
-                        if settings.ENABLE_RANDOM_CUSTOM_TEMPLATE and len(self.templates) > 0:
-                            custom_template = random.choice(self.templates)
-                            custom_template_id = custom_template.get('templateId', settings.CUSTOM_TEMPLATE_ID)
+                        if not self.custom_template_id and settings.ENABLE_RANDOM_CUSTOM_TEMPLATE and len(self.templates) > 0:
+                            self.custom_template = random.choice(self.templates)
+                            self.custom_template_id = custom_template.get('templateId', settings.CUSTOM_TEMPLATE_ID)
                         elif settings.CUSTOM_TEMPLATE_ID:
-                            custom_template_id = settings.CUSTOM_TEMPLATE_ID
+                            self.custom_template_id = settings.CUSTOM_TEMPLATE_ID
 
-                        if settings.ENABLE_DRAW_CUSTOM_TEMPLATE and custom_template_id:
+                        if settings.ENABLE_DRAW_CUSTOM_TEMPLATE and self.custom_template_id:
                             curr_user_template = await self.get_user_current_template(http_client=http_client)
                             await asyncio.sleep(delay=random.randint(2, 5))
                             is_successfully_subscribed = True
-                            if not curr_user_template or curr_user_template.get('id', 0) != custom_template_id:
-                                is_successfully_subscribed = await self.subscribe_to_template(http_client=http_client, template_id=custom_template_id)
+                            if not curr_user_template or curr_user_template.get('id', 0) != self.custom_template_id:
+                                is_successfully_subscribed = await self.subscribe_to_template(http_client=http_client, template_id=self.custom_template_id)
                                 if is_successfully_subscribed:
-                                    self.success(f"Successfully subscribed to the template | ID: <cyan>{custom_template_id}</cyan>")
+                                    self.success(f"Successfully subscribed to the template | ID: <cyan>{self.custom_template_id}</cyan>")
                                 await asyncio.sleep(delay=random.randint(2, 5))
                             if is_successfully_subscribed:
-                                template_info_data = await self.get_template_info(http_client=http_client, template_id=custom_template_id)
+                                template_info_data = await self.get_template_info(http_client=http_client, template_id=self.custom_template_id)
                                 if template_info_data:
                                     await asyncio.sleep(delay=random.randint(2, 5))
                                     image_url = template_info_data['url']
