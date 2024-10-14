@@ -20,6 +20,7 @@ if [ ! -f "venv/installed" ]; then
         echo "requirements.txt not found, skipping dependency installation."
     fi
 else
+    pip3 install -r requirements.txt
     echo "Dependencies already installed, skipping installation."
 fi
 

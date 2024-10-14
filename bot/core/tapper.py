@@ -3,6 +3,7 @@ from dateutil import parser
 from time import time
 from urllib.parse import unquote, quote
 import re
+import math
 from copy import deepcopy
 from PIL import Image
 import io
@@ -56,6 +57,8 @@ class Tapper:
         self.updated_pixels = {}
         self.socket = None
         self.socket_task = None
+        self.current_user_balance = 0
+        self.image_template = None
 
         self.session_ug_dict = self.load_user_agents() or []
 
@@ -216,7 +219,7 @@ class Tapper:
         except Exception as error:
             self.error(
                 f"Unknown error during Authorization: <light-yellow>{error}</light-yellow>")
-            await asyncio.sleep(delay=3)
+            await asyncio.sleep(delay=random.randint(3, 8))
 
     async def get_tg_web_data_not(self, proxy: str | None) -> str:
         if proxy:
@@ -278,7 +281,7 @@ class Tapper:
 
         except Exception as error:
             self.error(f"Unknown error during getting web data for squads: <light-yellow>{error}</light-yellow>")
-            await asyncio.sleep(delay=3)
+            await asyncio.sleep(delay=random.randint(3, 8))
 
     def is_night_time(self):
         night_start = settings.NIGHT_TIME[0]
@@ -313,6 +316,7 @@ class Tapper:
     async def get_user_info(self, http_client: aiohttp.ClientSession, show_error_message: bool):
         ssl = settings.ENABLE_SSL
         err = None
+        first = True
 
         for _ in range(2):
             try:
@@ -326,28 +330,43 @@ class Tapper:
 
                 return data
             except Exception as error:
-                ssl = not ssl
-                self.info(f"First get user info request not always successful, retrying..")
+#                 ssl = not ssl
+                if first:
+                    first = False
+                    self.info(f"First get user info request not always successful, retrying..")
+                await asyncio.sleep(delay=random.randint(3, 6))
                 err = error
                 continue
 
         if err != None and show_error_message == True:
-            self.error(f"Unknown error during get user info: <light-yellow>{err}</light-yellow>")
+            if self.check_timeout_error(error):
+                self.warning(f"Warning during getting user info: <magenta>Notpixel</magenta> server is not response.")
+            else:
+                self.error(f"Unknown error during getting user info: <light-yellow>{err}</light-yellow>")
             return None
 
     async def get_status(self, http_client: aiohttp.ClientSession):
-        try:
-            response = await http_client.get('https://notpx.app/api/v1/mining/status', ssl=settings.ENABLE_SSL)
+        for _ in range(3):
+            try:
+                response = await http_client.get('https://notpx.app/api/v1/mining/status', ssl=settings.ENABLE_SSL)
 
-            response.raise_for_status()
+                response.raise_for_status()
 
-            data = await response.json()
+                data = await response.json()
 
-            return data
-        except Exception as error:
-            self.error(f"Unknown error during processing status: <light-yellow>{error}</light-yellow>")
-            await asyncio.sleep(delay=3)
-            return None
+                return data
+
+            except Exception as error:
+                if self.check_timeout_error(error):
+                    self.warning(f"Warning during processing mining status: <magenta>Notpixel</magenta> server is not response. Retrying..")
+                    await asyncio.sleep(delay=random.randint(3, 6))
+                    continue
+                else:
+                    self.error(f"Unknown error during processing mining status: <light-yellow>{error}</light-yellow>")
+                    await asyncio.sleep(delay=random.randint(3, 6))
+                    return None
+
+        return None
 
     async def get_balance(self, http_client: aiohttp.ClientSession):
         try:
@@ -359,8 +378,11 @@ class Tapper:
 
             return data['userBalance']
         except Exception as error:
-            self.error(f"Unknown error during processing balance: <light-yellow>{error}</light-yellow>")
-            await asyncio.sleep(delay=3)
+            if self.check_timeout_error(error):
+                self.warning(f"Warning during processing balance: <magenta>Notpixel</magenta> server is not response.")
+            else:
+                self.error(f"Unknown error during processing balance: <light-yellow>{error}</light-yellow>")
+            await asyncio.sleep(delay=random.randint(3, 6))
             return None
 
     async def get_image(self, http_client, url, image_headers):
@@ -396,17 +418,34 @@ class Tapper:
 
         data = await draw_request.json()
 
-        self.success(f"Painted (X: <cyan>{x}</cyan>, Y: <cyan>{y}</cyan>) with color <light-blue>{color}</light-blue> 🎨️ | Balance <light-green>{'{:,.3f}'.format(data.get('balance', 'unknown'))}</light-green> 🔳")
+        new_balance = data.get('balance', 0)
+        added_points = round(new_balance - self.current_user_balance)
+        self.current_user_balance = new_balance
+
+        self.success(f"Painted (X: <cyan>{x}</cyan>, Y: <cyan>{y}</cyan>) with color <light-blue>{color}</light-blue> 🎨️ | Balance <light-green>{'{:,.3f}'.format(self.current_user_balance)}</light-green> <magenta>(+{added_points} pix)</magenta> 🔳")
+
+    def check_timeout_error(self, error):
+         try:
+             error_message = str(error)
+             is_timeout_error = re.search("504, message='Gateway Timeout'", error_message)
+             return is_timeout_error
+         except Exception as e:
+             return False
 
     async def draw_x3(self, http_client: aiohttp.ClientSession):
         try:
-            response = await http_client.get('https://notpx.app/api/v1/mining/status', ssl=settings.ENABLE_SSL)
+            if not self.image_template:
+                await self.draw(http_client=http_client)
+                return None
 
-            response.raise_for_status()
+            status_data = await self.get_status(http_client=http_client)
 
-            data = await response.json()
+            if status_data == None:
+                return None
 
-            charges = data['charges']
+            charges = status_data['charges']
+
+            self.current_user_balance = status_data['userBalance']
 
             if charges > 0:
                 self.info(f"Energy: <cyan>{charges}</cyan> ⚡️")
@@ -414,17 +453,8 @@ class Tapper:
                 self.info(f"No energy ⚡️")
                 return None
 
-            image_url = 'https://app.notpx.app/assets/durovoriginal-CqJYkgok.png'
-
             x_offset = 244 # initial Y coords of world template image
             y_offset = 244 # initial Y coords of world template image
-
-            image_headers = deepcopy(headers)
-            image_headers['Host'] = 'app.notpx.app'
-            image = await self.get_image(http_client, image_url, image_headers=image_headers)
-
-            if not image:
-                return None
 
             subscribe_message = json.dumps({
                 "action": "subscribe",
@@ -433,48 +463,65 @@ class Tapper:
 
             await self.socket.send_str(subscribe_message)
 
+            socket_error = False
+
+            tries = 2
+
             while charges > 0:
-                await asyncio.sleep(delay=random.randint(4, 8))
+                try:
 
-                break_socket = False
+                    break_socket = False
 
-                async for message in self.socket:
-                    if break_socket:
-                        break
+                    message = await asyncio.wait_for(self.socket.receive(), timeout=random.choices([5.0, 7.0, 9.0, 10.0], weights=[25, 25, 25, 25])[0])
 
                     if message.type == aiohttp.WSMsgType.TEXT:
-                        try:
-                            updates = message.data.split("\n")
+                        updates = message.data.split("\n")
+                        for update in updates:
+                            match = re.match(r'pixelUpdate:(\d+):#([0-9A-Fa-f]{6})', update)
 
-                            for update in updates:
-                                match = re.match(r'pixelUpdate:(\d+):#([0-9A-Fa-f]{6})', update)
+                            if match:
+                                pixel_index = match.group(1)
 
-                                if match:
-                                    pixel_index = match.group(1)
+                                if len(pixel_index) < 6:
+                                    continue
 
-                                    if len(pixel_index) < 6:
-                                        continue
+                                updated_y = int(str(pixel_index)[:3])
+                                updated_x = int(str(pixel_index)[3:]) - 1
+                                updated_pixel_color = f"#{match.group(2)}"
 
-                                    updated_y = int(str(pixel_index)[:3])
-                                    updated_x = int(str(pixel_index)[3:]) - 1
-                                    updated_pixel_color = f"#{match.group(2)}"
+                                if updated_x > 244 and updated_x < 755 and updated_y > 244 and updated_y < 755:
+                                    image_pixel = self.image_template.getpixel((updated_x - x_offset, updated_y - y_offset))
+                                    image_hex_color = '#{:02x}{:02x}{:02x}'.format(*image_pixel)
 
-                                    if updated_x > 244 and updated_x < 755 and updated_y > 244 and updated_y < 755:
-                                       image_pixel = image.getpixel((updated_x - x_offset, updated_y - y_offset))
-                                       image_hex_color = '#{:02x}{:02x}{:02x}'.format(*image_pixel)
-
-                                       if image_hex_color.upper() != updated_pixel_color.upper():
-                                           await self.send_draw_request(http_client=http_client, update=(updated_x, updated_y, image_hex_color.upper()))
-                                           charges = charges - 1
-                                           break_socket = True
-                                           break
-                        except Exception as e:
-                            self.error(f"Websocket error during painting (x3): {e}")
+                                    if image_hex_color.upper() != updated_pixel_color.upper():
+                                        charges = charges - 1
+                                        await self.send_draw_request(http_client=http_client, update=(updated_x, updated_y, image_hex_color.upper()))
+                                        tries = 2
+                                        break
+                except Exception as e:
+                    if self.check_timeout_error(e):
+                        if tries > 0 and charges > 0:
+                            self.warning(f"Warning during painting <cyan>[X3 MODE]</cyan>: <magenta>Notpixel</magenta> server is not response. Retrying..")
+                            tries = tries - 1
+                            sleep_time = random.randint(10, 20)
+                            self.info(f"Restart drawing in {round(sleep_time)} seconds...")
+                            await asyncio.sleep(delay=sleep_time)
+                            continue
+                        else:
+                            self.warning(f"Warning during painting <cyan>[X3 MODE]</cyan>: <magenta>Notpixel</magenta> server is not response.")
+                            break
+                    else:
+                        self.error(f"Unknown error during painting <cyan>[X3 MODE]</cyan>: {e}")
+                        break
         except Exception as error:
-            self.warning(f"Unknown error during painting (x3): <light-yellow>{error}</light-yellow>")
-            self.info(f"Start drawing without x3...")
-            await asyncio.sleep(delay=3)
-            await self.draw(http_client=http_client)
+            if self.check_timeout_error(error):
+                self.warning(f"Warning during painting <cyan>[X3 MODE]</cyan>: <magenta>Notpixel</magenta> server is not response.")
+            else:
+                if error:
+                    self.error(f"Unknown error during painting <cyan>[X3 MODE]</cyan>: <light-yellow>{error}</light-yellow>")
+                else:
+                    self.error(f"Unknown error during painting <cyan>[X3 MODE]</cyan>.")
+            await asyncio.sleep(delay=random.randint(2, 5))
 
     async def draw(self, http_client: aiohttp.ClientSession):
         try:
@@ -485,6 +532,8 @@ class Tapper:
             data = await response.json()
 
             charges = data['charges']
+
+            self.current_user_balance = data['userBalance']
 
             if charges > 0:
                 self.info(f"Energy: <cyan>{charges}</cyan> ⚡️")
@@ -517,7 +566,10 @@ class Tapper:
 
                 await asyncio.sleep(delay=random.randint(5, 10))
         except Exception as error:
-            self.error(f"Unknown error during painting: <light-yellow>{error}</light-yellow>")
+            if self.check_timeout_error(error):
+                self.warning(f"Warning during painting: <magenta>Notpixel</magenta> server is not response.")
+            else:
+                self.error(f"Unknown error during painting: <light-yellow>{error}</light-yellow>")
             await asyncio.sleep(delay=3)
 
     async def upgrade(self, http_client: aiohttp.ClientSession):
@@ -562,7 +614,10 @@ class Tapper:
                             return
 
         except Exception as error:
-            self.error(f"Unknown error during upgrading: <light-yellow>{error}</light-yellow>")
+            if self.check_timeout_error(error):
+                self.warning(f"Warning during upgrading: <magenta>Notpixel</magenta> server is not response.")
+            else:
+                self.error(f"Unknown error during upgrading: <light-yellow>{error}</light-yellow>")
             await asyncio.sleep(delay=3)
 
     async def run_tasks(self, http_client: aiohttp.ClientSession):
@@ -596,22 +651,23 @@ class Tapper:
                         social = split_str[0]
                         name = split_str[1]
 
-                        if social == 'channel' and settings.ENABLE_JOIN_TG_CHANNELS:
+                        if social == 'channel' and settings.UNSAFE_ENABLE_JOIN_TG_CHANNELS:
                             continue
-#                             try:
-#                                 if not self.tg_client.is_connected:
-#                                     await self.tg_client.connect()
-#                                 await asyncio.sleep(delay=random.randint(2, 3))
-#                                 await self.tg_client.join_chat(name)
-#                                 await self.tg_client.disconnect()
-#                                 await asyncio.sleep(delay=random.randint(3, 5))
-#                                 self.success(f"Successfully joined to the <cyan>{name}</cyan> channel ✔️")
-#                             except Exception as error:
-#                                 self.error(f"Unknown error during joining to {name} channel: <light-yellow>{error}</light-yellow>")
-#                             finally:
-#                                 # Disconnect the client only if necessary, for instance, when the entire task is done
-#                                 if self.tg_client.is_connected:
-#                                     await self.tg_client.disconnect()
+                            try:
+                                if not self.tg_client.is_connected:
+                                    await self.tg_client.connect()
+                                await asyncio.sleep(delay=random.randint(10, 20))
+                                await self.tg_client.join_chat(name)
+                                await asyncio.sleep(delay=random.randint(10, 20))
+                                self.success(f"Successfully joined to the <cyan>{name}</cyan> channel ✔️")
+                            except Exception as error:
+                                self.error(f"Unknown error during joining to {name} channel: <light-yellow>{error}</light-yellow>")
+                            finally:
+                                # Disconnect the client only if necessary, for instance, when the entire task is done
+                                if self.tg_client.is_connected:
+                                    await self.tg_client.disconnect()
+
+                                await asyncio.sleep(delay=random.randint(10, 20))
 
                         response = await http_client.get(f'https://notpx.app/api/v1/mining/task/check/{social}?name={name}', ssl=settings.ENABLE_SSL)
                     else:
@@ -628,6 +684,8 @@ class Tapper:
 
                         current_balance = await self.get_balance(http_client=http_client)
 
+                        self.current_user_balance = current_balance
+
                         if current_balance is None:
                             self.info(f"Current balance: Unknown 🔳")
                         else:
@@ -638,7 +696,11 @@ class Tapper:
                     await asyncio.sleep(delay=random.randint(3, 7))
 
         except Exception as error:
-            self.error(f"Unknown error during processing tasks: <light-yellow>{error}</light-yellow>")
+            if self.check_timeout_error(error):
+                self.warning(f"Warning during processing tasks: <magenta>Notpixel</magenta> server is not response.")
+            else:
+                self.error(f"Unknown error during processing tasks: <light-yellow>{error}</light-yellow>")
+            await asyncio.sleep(delay=random.randint(3, 7))
 
     async def claim_mine(self, http_client: aiohttp.ClientSession):
         try:
@@ -664,8 +726,10 @@ class Tapper:
 
             return response_json['claimed']
         except Exception as error:
-            self.error(f"Unknown error during claiming reward: <light-yellow>{error}</light-yellow>")
-
+            if self.check_timeout_error(error):
+                self.warning(f"Warning during claiming reward: <magenta>Notpixel</magenta> server is not response.")
+            else:
+                self.error(f"Unknown error during claiming reward: <light-yellow>{error}</light-yellow>")
             await asyncio.sleep(delay=3)
 
     async def join_squad(self, http_client=aiohttp.ClientSession, user={}):
@@ -677,7 +741,7 @@ class Tapper:
                     if self.already_joined_squad_channel != settings.SQUAD_SLUG:
                         if not self.tg_client.is_connected:
                             await self.tg_client.connect()
-                            await asyncio.sleep(delay=2)
+                            await asyncio.sleep(delay=random.randint(10, 20))
 
                         res = await self.tg_client.join_chat(settings.SQUAD_SLUG)
 
@@ -686,7 +750,7 @@ class Tapper:
 
                         self.already_joined_squad_channel = settings.SQUAD_SLUG
 
-                        await asyncio.sleep(delay=2)
+                        await asyncio.sleep(delay=random.randint(10, 20))
 
                         if self.tg_client.is_connected:
                             await self.tg_client.disconnect()
@@ -737,9 +801,11 @@ class Tapper:
                 else:
                     self.warning(f"Something went wrong when joining squad: <magenta>{squad}</magenta>")
         except Exception as error:
-            self.error(f"Unknown error when joining squad: <light-yellow>{error}</light-yellow>")
-
-            await asyncio.sleep(delay=3)
+            if self.check_timeout_error(error):
+                self.warning(f"Warning during joining squad: <magenta>Notpixel</magenta> server is not response.")
+            else:
+                self.error(f"Unknown error during joining squad: <light-yellow>{error}</light-yellow>")
+            await asyncio.sleep(delay=random.randint(5, 10))
 
     async def create_socket_connection(self, http_client: aiohttp.ClientSession):
         uri = "wss://notpx.app/api/v2/image/ws"
@@ -749,12 +815,12 @@ class Tapper:
 
             self.socket = socket
 
-            self.info("WebSocket connected successfully")
+#             self.info("WebSocket connected successfully")
 
             return socket
 
         except Exception as e:
-            self.error(f"WebSocket connection error: {e}")
+#             self.error(f"WebSocket connection error: {e}")
             return None
 
     async def run(self, proxy: str | None) -> None:
@@ -776,6 +842,7 @@ class Tapper:
 
         access_token_created_time = 0
         token_live_time = random.randint(500, 900)
+        tries_to_login = 4
 
         while True:
             try:
@@ -803,18 +870,36 @@ class Tapper:
                 await asyncio.sleep(delay=3)
 
             except Exception as error:
-                self.error(f"Unknown error during login: <light-yellow>{error}</light-yellow>")
-                await asyncio.sleep(delay=3)
-                break
+                if self.check_timeout_error(error):
+                    self.warning(f"Warning during login: <magenta>Notpixel</magenta> server is not response.")
+                    if tries_to_login > 0:
+                        tries_to_login = tries_to_login - 1
+                        self.info(f"Login request not always successful, retrying..")
+                        await asyncio.sleep(delay=random.randint(10, 40))
+                    else:
+                        await asyncio.sleep(delay=5)
+                        break
+                else:
+                    self.error(f"Unknown error during login: <light-yellow>{error}</light-yellow>")
+                    await asyncio.sleep(delay=5)
+                    break
 
             try:
                 user = await self.get_user_info(http_client=http_client, show_error_message=True)
 
-                await asyncio.sleep(delay=2)
+                await asyncio.sleep(delay=random.randint(2, 5))
 
                 if user is not None:
-                    if settings.ENABLE_EXPERIMENTAL_X3_MODE:
+                    if not self.image_template:
+                        image_url = 'https://app.notpx.app/assets/durovoriginal-CqJYkgok.png'
+                        image_headers = deepcopy(headers)
+                        image_headers['Host'] = 'app.notpx.app'
+                        self.image_template = await self.get_image(http_client, image_url, image_headers=image_headers)
+                        await asyncio.sleep(delay=random.randint(2, 5))
+
+                    if settings.ENABLE_EXPERIMENTAL_X3_MODE and self.image_template:
                         self.socket = await self.create_socket_connection(http_client=http_client)
+                        await asyncio.sleep(delay=random.randint(2, 10))
 
                     self.user = user
                     current_balance = await self.get_balance(http_client=http_client)
@@ -828,25 +913,30 @@ class Tapper:
 
                     if settings.ENABLE_AUTO_JOIN_TO_SQUAD:
                         await self.join_squad(http_client=http_client, user=user)
+                        await asyncio.sleep(delay=random.randint(2, 5))
 
                     if settings.ENABLE_AUTO_DRAW:
-                        if settings.ENABLE_EXPERIMENTAL_X3_MODE and self.socket:
+                        if settings.ENABLE_EXPERIMENTAL_X3_MODE and self.socket and self.image_template:
                             await self.draw_x3(http_client=http_client)
                         else:
                             await self.draw(http_client=http_client)
+                        await asyncio.sleep(delay=random.randint(2, 5))
 
                     if settings.ENABLE_AUTO_UPGRADE:
                         status = await self.upgrade(http_client=http_client)
                         if status is not None:
                             self.info(f"Claim reward: <light-green>{status}</light-green> ✔️")
+                        await asyncio.sleep(delay=random.randint(2, 5))
 
                     if settings.ENABLE_CLAIM_REWARD:
                         reward = await self.claim_mine(http_client=http_client)
                         if reward is not None:
                             self.info(f"Claim reward: <light-green>{'{:,.3f}'.format(reward)}</light-green> 🔳")
+                        await asyncio.sleep(delay=random.randint(2, 5))
 
                     if settings.ENABLE_AUTO_TASKS:
                         await self.run_tasks(http_client=http_client)
+                        await asyncio.sleep(delay=random.randint(2, 5))
 
                 sleep_time = random.randint(settings.SLEEP_TIME_IN_MINUTES[0], settings.SLEEP_TIME_IN_MINUTES[1])
 
@@ -866,9 +956,8 @@ class Tapper:
                 if self.socket != None:
                     try:
                         await self.socket.close()
-                        self.info(f"WebSocket closed successfully")
                     except Exception as error:
-                        self.error(f"Unknown error during closing socket: <light-yellow>{error}</light-yellow>")
+                        self.warning(f"Unknown error during closing socket: <light-yellow>{error}</light-yellow>")
 
                 await asyncio.sleep(delay=sleep_time*60)
 

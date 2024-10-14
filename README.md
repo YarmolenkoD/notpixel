@@ -54,7 +54,7 @@
 |              **USE_PROXY_FROM_FILE**              |                         Whether to use a proxy from the `bot/config/proxies.txt` file (True / False)                         |
 |               **ENABLE_AUTO_TASKS**               |                                               Enable auto tasks (True / False)                                               |
 |               **ENABLE_AUTO_DRAW**                |                                              Enable auto drawing (True / False)                                              |
-|            **ENABLE_JOIN_TG_CHANNELS**            |                                      Enable auto joining to tg channels (True / False)                                       |
+|        **UNSAFE_ENABLE_JOIN_TG_CHANNELS**         |                                [!!UNSAFE!!] Enable auto joining to tg channels (True / False)                                |
 |              **ENABLE_CLAIM_REWARD**              |                                         Enable auto claim of rewards (True / False)                                          |
 |              **ENABLE_AUTO_UPGRADE**              |                                             Enable auto upgrading (True / False)                                             |
 |            **DRAW_RANDOM_X_DIAPOSON**             |                      Range of pixels on the x-axis, randomly on which it will draw (default - [0,100])                       |
@@ -66,7 +66,7 @@
 |                  **SQUAD_SLUG**                   |                               Squad slug [telegram channel slug] (default - notpixel_raiders)                                |
 |               **DISABLE_IN_NIGHT**                |                                          Disable script in night (default - False)                                           |
 |                  **NIGHT_TIME**                   |                                          Night time [from, to] (default - [23, 6])                                           |
-|          **ENABLE_EXPERIMENTAL_X3_MODE**          |                                         Enable experimental X3 mode (default - False)                                         |
+|          **ENABLE_EXPERIMENTAL_X3_MODE**          |                                        Enable experimental X3 mode (default - False)                                         |
 
 ## Quick Start 📚
 

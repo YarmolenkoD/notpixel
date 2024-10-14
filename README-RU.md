@@ -54,7 +54,7 @@
 |              **USE_PROXY_FROM_FILE**              |                           Использовать ли прокси из файла `bot/config/proxies.txt` (True / False)                           |
 |               **ENABLE_AUTO_TASKS**               |                                 Включить ли автоматическое выполнение тасков (True / False)                                 |
 |               **ENABLE_AUTO_DRAW**                |                                  Включить ли автоматическое выполнение игр (True / False)                                   |
-|            **ENABLE_JOIN_TG_CHANNELS**            |                             Включить ли автоматическое подключение к тг каналам (True / False)                              |
+|        **UNSAFE_ENABLE_JOIN_TG_CHANNELS**         |          [ИСПОЛЬЗОВАНИЕ СВОЙСТВА НЕ БЕЗОАПАСНО] Включить ли автоматическое подключение к тг каналам (True / False)          |
 |              **ENABLE_CLAIM_REWARD**              |                                   Включить ли автоматический збор ревардов (True / False)                                   |
 |              **ENABLE_AUTO_UPGRADE**              |                                     Включить ли автоматический апгрейд  (True / False)                                      |
 |            **DRAW_RANDOM_X_DIAPOSON**             |     Диапазон пикселей по оси X, в произвольном порядке, на котором будет происходить рисование (по умолчанию - [0,100])     |

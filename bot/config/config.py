@@ -17,7 +17,7 @@ class Settings(BaseSettings):
 
     ENABLE_AUTO_TASKS: bool = True
     ENABLE_AUTO_DRAW: bool = True
-    ENABLE_JOIN_TG_CHANNELS: bool = False
+    UNSAFE_ENABLE_JOIN_TG_CHANNELS: bool = False
     ENABLE_CLAIM_REWARD: bool = True
     ENABLE_AUTO_UPGRADE: bool = True
 
@@ -28,11 +28,12 @@ class Settings(BaseSettings):
     DISABLE_IN_NIGHT: bool = False
     NIGHT_TIME: list[int] = [23, 6]
 
-    DRAW_RANDOM_X_DIAPOSON: list[int] = [480, 510]
-    DRAW_RANDOM_Y_DIAPOSON: list[int] = [480, 500]
-    DRAW_RANDOM_COLORS: list[str] = ["#000000"]
+    DRAW_RANDOM_X_DIAPOSON: list[int] = [390, 435]
+    DRAW_RANDOM_Y_DIAPOSON: list[int] = [415, 445]
+    DRAW_RANDOM_COLORS: list[str] = ["#3690EA"]
 
     ENABLE_EXPERIMENTAL_X3_MODE: bool = False
+
     ENABLE_DRAW_ART: bool = False
     DRAW_ART_COORDS: list[dict] = [
         {
