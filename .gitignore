@@ -169,5 +169,7 @@ sessions*/
 
 *.session
 
+bot/assets/templates
+
 user_agents.json
 

@@ -59,6 +59,8 @@ class Settings(BaseSettings):
 
     ENABLE_EXPERIMENTAL_X3_MODE: bool = True
 
+    UNABLE_JOIN_TG_CHANNELS: bool = False # NOT RECOMMENDED
+
 
 settings = Settings()
 
