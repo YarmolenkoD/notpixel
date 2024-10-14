@@ -28,7 +28,10 @@ My other bots:
 💩Boinkers - https://github.com/YarmolenkoD/boinkers
 🚀Moonbix - https://github.com/YarmolenkoD/moonbix [GAME IS NOT WORKING]
 
-NEW ENV VARIABLE: ENABLE_EXPERIMENTAL_X3_MODE=True (Default = True)
+NEW ENV VARIABLES:
+
+ENABLE_DRAW_CUSTOM_TEMPLATE=False (Default = False)
+CUSTOM_TEMPLATE_ID=6914611412 (Default = 6914611412)
 
 Select an action:
 
