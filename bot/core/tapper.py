@@ -568,6 +568,9 @@ class Tapper:
             if status_data == None:
                 return None
 
+            if self.socket:
+                return None
+
             charges = status_data['charges']
 
             self.current_user_balance = status_data['userBalance']
@@ -617,7 +620,6 @@ class Tapper:
                                     if image_hex_color.upper() != updated_pixel_color.upper():
                                         charges = charges - 1
                                         await self.send_draw_request(http_client=http_client, update=(updated_x, updated_y, image_hex_color.upper()))
-                                        tries = 2
                                         break
                 except Exception as e:
                     if self.check_timeout_error(e):
