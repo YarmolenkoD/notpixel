@@ -131,7 +131,7 @@ class Tapper:
         return []
 
     def load_templates(self):
-        templates_list_file_name = "templates-list.json"
+        templates_list_file_name = "random-templates-list.json"
 
         try:
             with open(templates_list_file_name, 'r') as user_agents:
@@ -447,7 +447,7 @@ class Tapper:
 #             self.error(f"Error during loading image from url: {url} | Error: {error}")
 #             return None
 
-    async def send_draw_request(self, http_client: aiohttp.ClientSession, update):
+    async def send_draw_request(self, http_client: aiohttp.ClientSession, update, template_id):
         x, y, color = update
 
         pixelId = int(f'{y}{x}')+1
@@ -471,7 +471,7 @@ class Tapper:
         added_points = round(new_balance - self.current_user_balance)
         self.current_user_balance = new_balance
 
-        self.success(f"Painted (X: <cyan>{x}</cyan>, Y: <cyan>{y}</cyan>) with color <light-blue>{color}</light-blue> 🎨️ | Balance <light-green>{'{:,.3f}'.format(self.current_user_balance)}</light-green> <magenta>(+{added_points} pix)</magenta> 🔳")
+        self.success(f"Painted (X: <cyan>{x}</cyan>, Y: <cyan>{y}</cyan>) with color <light-blue>{color}</light-blue> 🎨️ | Balance <light-green>{'{:,.3f}'.format(self.current_user_balance)}</light-green> <magenta>(+{added_points} pix)</magenta> 🔳 | Template <cyan>{template_id}</cyan>")
 
     def check_timeout_error(self, error):
          try:
@@ -563,6 +563,7 @@ class Tapper:
             if not template_info:
                 return None
 
+            curr_template_id = template_info.get('id', 'Durov')
             curr_image = template_info.get('image', None)
             curr_start_x = template_info.get('x', 0)
             curr_start_y = template_info.get('y', 0)
@@ -629,7 +630,7 @@ class Tapper:
 
                                     if image_hex_color.upper() != updated_pixel_color.upper():
                                         charges = charges - 1
-                                        await self.send_draw_request(http_client=http_client, update=(updated_x, updated_y, image_hex_color.upper()))
+                                        await self.send_draw_request(http_client=http_client, update=(updated_x, updated_y, image_hex_color.upper()), template_id=curr_template_id)
                                         break
                 except Exception as e:
                     if self.check_timeout_error(e):
@@ -672,6 +673,7 @@ class Tapper:
             if not template_info:
                 return None
 
+            curr_template_id = template_info.get('id', 'Durov')
             curr_image = template_info.get('image', None)
             curr_start_x = template_info.get('x', 0)
             curr_start_y = template_info.get('y', 0)
@@ -708,7 +710,7 @@ class Tapper:
                             image_pixel = curr_image.getpixel((x, y))
                             image_hex_color = '#{:02x}{:02x}{:02x}'.format(*image_pixel)
                             charges = charges - 1
-                            await self.send_draw_request(http_client=http_client, update=(curr_start_x + x, curr_start_y + y, image_hex_color.upper()))
+                            await self.send_draw_request(http_client=http_client, update=(curr_start_x + x, curr_start_y + y, image_hex_color.upper()), template_id=curr_template_id)
                             await asyncio.sleep(delay=random.randint(4, 10))
                             continue
                 except Exception as e:
@@ -1160,7 +1162,8 @@ class Tapper:
                             'x': 244,
                             'y': 244,
                             'image_size': 510,
-                            'image': None
+                            'image': None,
+                            'id': "Durov",
                         }
 
                         if not self.custom_template_id and settings.ENABLE_RANDOM_CUSTOM_TEMPLATE and len(self.templates) > 0:
@@ -1192,6 +1195,7 @@ class Tapper:
                                         'y': template_info_data['y'],
                                         'image_size': template_info_data['imageSize'],
                                         'image': template_image,
+                                        'id': template_info_data['id'],
                                     }
 
                         if not self.template_info['image']:
