@@ -12,10 +12,6 @@
 > [!WARNING]
 > I am not responsible for your account. Please consider the potential risks before using this bot.
 
-### Forked from the repository [github](https://github.com/vadymfedorets/notpixel) 🎨
-### Thanks to [Vadym](https://github.com/vadymfedorets) for the code base 🚀
-### Subscribe to him and put stars to his bots 🔥
-
 ## MY OTHER BOTS
 
 ### 💩 [Boinkers](https://github.com/YarmolenkoD/boinkers)
@@ -34,6 +30,7 @@
 |              Proxy binding to session              |     ✅     |
 |           Support for pyrogram .session            |     ✅     |
 | Auto-register your account with your referral code |     ✅     |
+|                     X3 POINTS                      |     ✅     |
 |                     Auto tasks                     |     ✅     |
 |                     Auto games                     |     ✅     |
 |                    Авто drawing                    |     ✅     |
