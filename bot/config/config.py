@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     DISABLE_IN_NIGHT: bool = False
     NIGHT_TIME: list[int] = [23, 6]
 
+    ENABLE_SOCKETS: bool = False
     ENABLE_RANDOM_CUSTOM_TEMPLATE: bool = False
     ENABLE_DRAW_CUSTOM_TEMPLATE: bool = True
     CUSTOM_TEMPLATE_ID: int = 355876562
@@ -42,7 +43,6 @@ class Settings(BaseSettings):
     TASKS_TODO_LIST: list[str] = ["x:notcoin", "x:notpixel", "paint20pixels", "leagueBonusSilver", "leagueBonusGold", "leagueBonusPlatinum", "channel:notpixel_channel", "channel:notcoin"]
 
     USE_PROXY_FROM_FILE: bool = True
-
 
     # LEGACY CONFIGURATIONS
     ENABLE_DRAW_ART: bool = False
