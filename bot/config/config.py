@@ -30,7 +30,7 @@ class Settings(BaseSettings):
 
     ENABLE_RANDOM_CUSTOM_TEMPLATE: bool = False
     ENABLE_DRAW_CUSTOM_TEMPLATE: bool = True
-    CUSTOM_TEMPLATE_ID: int = 6914611412
+    CUSTOM_TEMPLATE_ID: int = 355876562
 
     ENABLE_SSL: bool = False
 
