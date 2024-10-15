@@ -421,31 +421,25 @@ class Tapper:
             self.error(f"Failed to load image from file: {image_filename} | Error: {error}")
 
         # If not, download the image from the URL
-        try:
-            async with http_client.get(url, headers=image_headers) as response:
-                if response.status == 200:
-                    img_data = await response.read()
-                    img = Image.open(io.BytesIO(img_data))
+        for _ in range(2):
+            try:
+                async with http_client.get(url, headers=image_headers) as response:
+                    if response.status == 200:
+                        img_data = await response.read()
+                        img = Image.open(io.BytesIO(img_data))
 
-                    # Save the image to the file system
-                    img.save(image_filename)
-                    return img
+                        # Save the image to the file system
+                        img.save(image_filename)
+                        return img
+                    else:
+                        raise Exception(f"Failed to download image from {url}, status: {response.status}")
+            except Exception as error:
+                if self.check_error(error, 'Failed to download'):
+                    self.warning(f"Warning during loading template image: {url}. Retrying..")
+                    continue
                 else:
-                    raise Exception(f"Failed to download image from {url}, status: {response.status}")
-        except Exception as error:
-            self.error(f"Error during loading image from url: {url} | Error: {error}")
-            return None
-#         try:
-#             async with http_client.get(url, headers=image_headers) as response:
-#                 if response.status == 200:
-#                     img_data = await response.read()
-#                     img = Image.open(io.BytesIO(img_data))
-#                     return img
-#                 else:
-#                     raise Exception(f"Failed to download image from {url}, status: {response.status}")
-#         except Exception as error:
-#             self.error(f"Error during loading image from url: {url} | Error: {error}")
-#             return None
+                    self.error(f"Error during loading template image: {url} | Error: {error}")
+                    return None
 
     async def send_draw_request(self, http_client: aiohttp.ClientSession, update, template_id):
         x, y, color = update
@@ -699,18 +693,23 @@ class Tapper:
 
             tries = 2
 
+            random_x_offset = random.randint(0, curr_image_size - 10)
+            random_y_offset = random.randint(0, curr_image_size - 10)
+
             while charges > 0:
                 try:
                     for x in range(curr_image_size):
+                        curr_x = x + random_x_offset
                         if charges == 0:
                             break
                         for y in range(curr_image_size):
+                            curr_y = y + random_y_offset
                             if charges == 0:
                                 break
-                            image_pixel = curr_image.getpixel((x, y))
+                            image_pixel = curr_image.getpixel((curr_x, curr_y))
                             image_hex_color = '#{:02x}{:02x}{:02x}'.format(*image_pixel)
                             charges = charges - 1
-                            await self.send_draw_request(http_client=http_client, update=(curr_start_x + x, curr_start_y + y, image_hex_color.upper()), template_id=curr_template_id)
+                            await self.send_draw_request(http_client=http_client, update=(curr_start_x + curr_x, curr_start_y + curr_y, image_hex_color.upper()), template_id=curr_template_id)
                             await asyncio.sleep(delay=random.randint(4, 10))
                             continue
                 except Exception as e:
