@@ -481,6 +481,14 @@ class Tapper:
          except Exception as e:
              return False
 
+    def check_error(self, error, message):
+        try:
+            error_message = str(error)
+            is_equal = re.search(message, error_message)
+            return is_equal
+        except Exception as e:
+            return False
+
     async def subscribe_to_template(self, http_client: aiohttp.ClientSession, template_id: int):
         for _ in range(3):
             try:
@@ -637,14 +645,17 @@ class Tapper:
                             await asyncio.sleep(delay=sleep_time)
                             continue
                         else:
-                            self.warning(f"Warning during painting <cyan>[TEMPLATE MODE]</cyan>: <magenta>Notpixel</magenta> server is not response.")
+                            self.warning(f"Warning during painting <cyan>[TEMPLATE MODE]</cyan>: <magenta>Notpixel</magenta> server is not response. Go to sleep..")
                             break
+                    elif self.check_error(e, "Bad Request"):
+                        self.warning(f"Warning during painting <cyan>[TEMPLATE MODE]</cyan>: <light-yellow>Bad Request</light-yellow>. Go to sleep..")
+                        break
                     else:
                         self.error(f"Unknown error during painting <cyan>[TEMPLATE MODE]</cyan>: {e}")
                         break
         except Exception as error:
             if self.check_timeout_error(error):
-                self.warning(f"Warning during painting <cyan>[TEMPLATE MODE]</cyan>: <magenta>Notpixel</magenta> server is not response.")
+                self.warning(f"Warning during painting <cyan>[TEMPLATE MODE]</cyan>: <magenta>Notpixel</magenta> server is not response. Go to sleep..")
             else:
                 if error:
                     self.error(f"Unknown error during painting <cyan>[TEMPLATE MODE]</cyan>: <light-yellow>{error}</light-yellow>")

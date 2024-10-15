@@ -173,3 +173,8 @@ bot/assets/templates
 
 user_agents.json
 
+node_modules
+index.js
+package-lock.json
+package.json
+
