@@ -436,6 +436,7 @@ class Tapper:
             except Exception as error:
                 if self.check_error(error, 'Failed to download'):
                     self.warning(f"Warning during loading template image: {url}. Retrying..")
+                    await asyncio.sleep(delay=random.randint(5, 10))
                     continue
                 else:
                     self.error(f"Error during loading template image: {url} | Error: {error}")
@@ -1032,12 +1033,6 @@ class Tapper:
                 self.error(f"Unknown error during joining squad: <light-yellow>{error}</light-yellow>")
             await asyncio.sleep(delay=random.randint(5, 10))
 
-    def generate_ws_key(self, ws_token, user_id):
-        try:
-            return ws_token
-        except Exception as e:
-            self.warning(f"WebSocket connection error: {e}")
-
     def generate_sec_websocket_key(self):
         # Генерируем 16 случайных байтов
         random_bytes = os.urandom(16)
@@ -1048,32 +1043,27 @@ class Tapper:
     async def create_socket_connection(self, http_client: aiohttp.ClientSession):
         uri = "wss://notpx.app/connection/websocket"
 
-
         curr_user = await self.get_user_info(http_client=http_client, show_error_message=False)
 
         user_id = curr_user.get('id', None)
         ws_token = curr_user.get('websocketToken', None)
 
-        print(11111111, ws_token)
+        headers_socket['User-Agent'] = http_client.headers['User-Agent']
+        headers_socket['Authorization'] = http_client.headers['Authorization']
+        headers_socket['Sec-Websocket-Key'] = self.generate_sec_websocket_key()
 
-#         headers_socket['User-Agent'] = http_client.headers['User-Agent']
-# #         headers_socket['Authorization'] = http_client.headers['Authorization']
-# #         headers_socket['Authorization'] = f"Bearer {ws_token}"
-#         headers_socket['Sec-Websocket-Key'] = 'NBDGFcs+J+cDZULSAf5HIQ=='
-# #         self.generate_sec_websocket_key()
-#
-#         try:
-#             socket = await http_client.ws_connect(uri, headers=headers_socket)
-#
-#             self.socket = socket
-#
-#             self.success("WebSocket connected successfully")
-#
-#             return socket
-#
-#         except Exception as e:
-#             self.warning(f"WebSocket connection error: {e}")
-#             return None
+        try:
+            socket = await http_client.ws_connect(uri, headers=headers_socket)
+
+            self.socket = socket
+
+            self.success("WebSocket connected successfully")
+
+            return socket
+
+        except Exception as e:
+            self.warning(f"WebSocket connection error: {e}")
+            return None
 
     async def run(self, proxy: str | None) -> None:
         if settings.USE_RANDOM_DELAY_IN_RUN:
