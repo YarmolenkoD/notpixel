@@ -700,6 +700,14 @@ class Tapper:
 
             while charges > 0:
                 try:
+#                     curr_x = random.randint(0, curr_image_size)
+#                     curr_y = random.randint(0, curr_image_size)
+#                     image_pixel = curr_image.getpixel((curr_x, curr_y))
+#                     image_hex_color = '#{:02x}{:02x}{:02x}'.format(*image_pixel)
+#                     charges = charges - 1
+#                     await self.send_draw_request(http_client=http_client, update=(curr_start_x + curr_x, curr_start_y + curr_y, image_hex_color.upper()), template_id=curr_template_id)
+#                     await asyncio.sleep(delay=random.randint(4, 10))
+#                     continue
                     for x in range(curr_image_size):
                         curr_x = x + random_x_offset
                         if charges == 0:
@@ -1109,7 +1117,7 @@ class Tapper:
                     access_token_created_time = time()
                     token_live_time = random.randint(500, 900)
 
-                    if self.first_run is not True:
+                    if self.first_run is not True and self.tg_web_data:
                         self.success("Logged in successfully")
                         self.first_run = True
 
@@ -1167,7 +1175,7 @@ class Tapper:
                         elif settings.CUSTOM_TEMPLATE_ID:
                             self.custom_template_id = settings.CUSTOM_TEMPLATE_ID
 
-                        if settings.ENABLE_DRAW_CUSTOM_TEMPLATE and self.custom_template_id:
+                        if (settings.ENABLE_DRAW_CUSTOM_TEMPLATE or settings.ENABLE_RANDOM_CUSTOM_TEMPLATE) and self.custom_template_id:
                             curr_user_template = await self.get_user_current_template(http_client=http_client)
                             await asyncio.sleep(delay=random.randint(2, 5))
                             is_successfully_subscribed = True
