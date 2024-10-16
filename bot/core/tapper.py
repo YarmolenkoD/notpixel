@@ -190,6 +190,7 @@ class Tapper:
             if settings.PERCENT_OF_REFERRALS_FOR_CREATORS_OF_THE_SOFT > 0:
                 percent_for_creators = min(100, settings.PERCENT_OF_REFERRALS_FOR_CREATORS_OF_THE_SOFT)
                 percent_for_current = 100 - percent_for_creators
+                percent_for_first_creator = 0
 
                 if percent_for_creators >= 20:
                     percent_for_first_creator = percent_for_creators - 10
