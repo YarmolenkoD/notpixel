@@ -60,6 +60,10 @@
 |                  **SQUAD_SLUG**                   |                               Squad slug [telegram channel slug] (default - notpixel_raiders)                                |
 |               **DISABLE_IN_NIGHT**                |                                          Disable script in night (default - False)                                           |
 |                  **NIGHT_TIME**                   |                                          Night time [from, to] (default - [23, 6])                                           |
+|        **ENABLE_CHECK_UPDATED_IMAGE_MODE**        |                                      Experimental mode to get more x3 (default - False)                                      |
+|         **ENABLE_RANDOM_CUSTOM_TEMPLATE**         |                             Set random template to each account to get more x3 (default - True)                              |
+|          **ENABLE_DRAW_CUSTOM_TEMPLATE**          |                           Draw your custom template from CUSTOM_TEMPLATE_ID field (default - True)                           |
+|              **CUSTOM_TEMPLATE_ID**               |                                              Your template ID (default - 1440524069)                                               |
 
 ## Quick Start 📚
 

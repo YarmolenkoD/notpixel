@@ -30,9 +30,7 @@ My other bots:
 
 NEW ENV VARIABLES:
 
-ENABLE_RANDOM_CUSTOM_TEMPLATE=True (Default = True)
-ENABLE_DRAW_CUSTOM_TEMPLATE=True (Default = True)
-CUSTOM_TEMPLATE_ID=355876562 (Default = 355876562)
+ENABLE_CHECK_UPDATED_IMAGE_MODE=False (Default = False)
 
 Select an action:
 
