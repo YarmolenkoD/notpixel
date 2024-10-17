@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     NIGHT_TIME: list[int] = [23, 6]
 
     ENABLE_SOCKETS: bool = False
+    ENABLE_CHECK_UPDATED_IMAGE_MODE: bool = False
     ENABLE_RANDOM_CUSTOM_TEMPLATE: bool = True
     ENABLE_DRAW_CUSTOM_TEMPLATE: bool = True
     CUSTOM_TEMPLATE_ID: int = 355876562

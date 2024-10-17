@@ -8,6 +8,7 @@ import math
 from copy import deepcopy
 from PIL import Image
 import io
+import ssl
 
 from json import dump as dp, loads as ld
 from aiocfscrape import CloudflareScraper
@@ -407,13 +408,13 @@ class Tapper:
             await asyncio.sleep(delay=random.randint(3, 6))
             return None
 
-    async def get_image(self, http_client, url, image_headers):
+    async def get_image(self, http_client, url, image_headers, load_from_file=True):
         # Extract the image filename from the URL
         image_filename = os.path.join(self.image_directory, url.split("/")[-1])
 
         # Check if image exists in file system
         try:
-            if os.path.exists(image_filename):
+            if load_from_file and os.path.exists(image_filename):
                 # Open and return the image from file system
                 img = Image.open(image_filename)
                 img.load()  # Load the image data
@@ -430,7 +431,8 @@ class Tapper:
                         img = Image.open(io.BytesIO(img_data))
 
                         # Save the image to the file system
-                        img.save(image_filename)
+                        if load_from_file:
+                            img.save(image_filename)
                         return img
                     else:
                         raise Exception(f"Failed to download image from {url}, status: {response.status}")
@@ -603,7 +605,7 @@ class Tapper:
 
                     message = await asyncio.wait_for(self.socket.receive(), timeout=random.choices([8.0, 9.0, 10.0, 11.0], weights=[25, 25, 25, 25])[0])
 
-                    if message.type == WSMsgType.CLOSE:
+                    if message.type == aiohttp.WSMsgType.CLOSE:
                         break
                     elif message.type == aiohttp.WSMsgType.TEXT:
                         updates = message.data.split("\n")
@@ -664,6 +666,17 @@ class Tapper:
                     self.error(f"Unknown error during painting <cyan>[TEMPLATE MODE]</cyan>.")
             await asyncio.sleep(delay=random.randint(2, 5))
 
+    async def get_updated_image(self, http_client: aiohttp.ClientSession):
+        try:
+            current_image_url = 'https://image.notpx.app/api/v2/image'
+            image_headers = deepcopy(headers)
+            image_headers['Host'] = 'image.notpx.app'
+
+            current_image = await self.get_image(http_client, current_image_url, image_headers=image_headers, load_from_file=False)  # Аргумент image_headers не потрібен
+            return current_image
+        except Exception as error:
+            self.error(f"Unknown error during getting updated image: <light-yellow>{error}</light-yellow>")
+
     async def draw_template(self, http_client: aiohttp.ClientSession, template_info):
         try:
             if not template_info:
@@ -698,29 +711,52 @@ class Tapper:
             random_x_offset = random.randint(0, curr_image_size - 10)
             random_y_offset = random.randint(0, curr_image_size - 10)
 
+            updated_image = None
+
+            updated_image_get_time = 0
+            updated_image_live_time = random.randint(10, 20)
+
+            # EXPERIMENTAL MODE
+            if settings.ENABLE_CHECK_UPDATED_IMAGE_MODE:
+                updated_image = await self.get_updated_image(http_client=http_client)
+                updated_image_get_time = time()
+
             while charges > 0:
                 try:
-#                     curr_x = random.randint(0, curr_image_size)
-#                     curr_y = random.randint(0, curr_image_size)
-#                     image_pixel = curr_image.getpixel((curr_x, curr_y))
-#                     image_hex_color = '#{:02x}{:02x}{:02x}'.format(*image_pixel)
-#                     charges = charges - 1
-#                     await self.send_draw_request(http_client=http_client, update=(curr_start_x + curr_x, curr_start_y + curr_y, image_hex_color.upper()), template_id=curr_template_id)
-#                     await asyncio.sleep(delay=random.randint(4, 10))
-#                     continue
                     for x in range(curr_image_size):
                         curr_x = x + random_x_offset
                         if charges == 0:
                             break
+
+                        if settings.ENABLE_CHECK_UPDATED_IMAGE_MODE and (time() - updated_image_get_time >= updated_image_live_time):
+                            updated_image = await self.get_updated_image(http_client=http_client)
+                            updated_image_get_time = time()
+
                         for y in range(curr_image_size):
                             curr_y = y + random_y_offset
                             if charges == 0:
                                 break
+
+                            if settings.ENABLE_CHECK_UPDATED_IMAGE_MODE and (time() - updated_image_get_time >= updated_image_live_time):
+                                updated_image = await self.get_updated_image(http_client=http_client)
+                                updated_image_get_time = time()
+
+                            updated_image_pixel = None
+                            updated_image_hex_color = None
+
+                            if updated_image:
+                                updated_image_pixel = updated_image.getpixel((curr_x, curr_y))
+                                updated_image_hex_color = '#{:02x}{:02x}{:02x}'.format(*updated_image_pixel)
+
                             image_pixel = curr_image.getpixel((curr_x, curr_y))
                             image_hex_color = '#{:02x}{:02x}{:02x}'.format(*image_pixel)
-                            charges = charges - 1
-                            await self.send_draw_request(http_client=http_client, update=(curr_start_x + curr_x, curr_start_y + curr_y, image_hex_color.upper()), template_id=curr_template_id)
-                            await asyncio.sleep(delay=random.randint(4, 10))
+
+                            if updated_image_hex_color != image_hex_color:
+                                charges = charges - 1
+                                await self.send_draw_request(http_client=http_client, update=(curr_start_x + curr_x, curr_start_y + curr_y, image_hex_color.upper()), template_id=curr_template_id)
+                                await asyncio.sleep(delay=random.randint(4, 8))
+                            else:
+                                await asyncio.sleep(delay=random.randint(3, 6))
                             continue
                 except Exception as e:
                     if self.check_timeout_error(e):
@@ -757,55 +793,6 @@ class Tapper:
                 else:
                     self.error(f"Unknown error during painting <cyan>[TEMPLATE MODE]</cyan>.")
             await asyncio.sleep(delay=random.randint(2, 5))
-
-    async def draw(self, http_client: aiohttp.ClientSession):
-        try:
-            response = await http_client.get('https://notpx.app/api/v1/mining/status', ssl=settings.ENABLE_SSL)
-
-            response.raise_for_status()
-
-            data = await response.json()
-
-            charges = data['charges']
-
-            self.current_user_balance = data['userBalance']
-
-            if charges > 0:
-                self.info(f"Energy: <cyan>{charges}</cyan> ⚡️")
-            else:
-                self.info(f"No energy ⚡️")
-
-            for _ in range(charges):
-                if settings.ENABLE_DRAW_ART:
-                    curr = random.choice(settings.DRAW_ART_COORDS)
-
-                    if curr['x']['type'] == 'diaposon':
-                        x = random.randint(curr['x']['value'][0], curr['x']['value'][1])
-                    else:
-                        x = random.choice(curr['x']['value'])
-
-                    if curr['y']['type'] == 'diaposon':
-                        y = random.randint(curr['y']['value'][0], curr['y']['value'][1])
-                    else:
-                        y = random.choice(curr['y']['value'])
-
-                    color = curr['color']
-
-                else:
-                    x = random.randint(settings.DRAW_RANDOM_X_DIAPOSON[0], settings.DRAW_RANDOM_X_DIAPOSON[1])
-                    y = random.randint(settings.DRAW_RANDOM_Y_DIAPOSON[0], settings.DRAW_RANDOM_Y_DIAPOSON[1])
-
-                    color = random.choice(settings.DRAW_RANDOM_COLORS)
-
-                await self.send_draw_request(http_client=http_client, update=(x, y, color))
-
-                await asyncio.sleep(delay=random.randint(5, 10))
-        except Exception as error:
-            if self.check_timeout_error(error):
-                self.warning(f"Warning during painting: <magenta>Notpixel</magenta> server is not response.")
-            else:
-                self.error(f"Unknown error during painting: <light-yellow>{error}</light-yellow>")
-            await asyncio.sleep(delay=3)
 
     async def upgrade(self, http_client: aiohttp.ClientSession):
         try:
@@ -1250,11 +1237,11 @@ class Tapper:
                 else:
                     self.info(f"sleep {int(sleep_time)} minutes between cycles 💤")
 
-#                 if self.socket != None:
-#                     try:
-#                         await self.socket.close()
-#                     except Exception as error:
-#                         self.warning(f"Unknown error during closing socket: <light-yellow>{error}</light-yellow>")
+                if self.socket != None:
+                    try:
+                        await self.socket.close()
+                    except Exception as error:
+                        self.warning(f"Unknown error during closing socket: <light-yellow>{error}</light-yellow>")
 
                 await asyncio.sleep(delay=sleep_time*60)
 
