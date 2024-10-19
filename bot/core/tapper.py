@@ -61,7 +61,7 @@ class Tapper:
         self.socket_task = None
         self.current_user_balance = 0
         self.template_info = {}
-        self.image_directory = './bot/assets/templates'
+        self.image_directory = './bot/assets/templatesV2'
         self.custom_template_id = None
 
         self.session_ug_dict = self.load_user_agents() or []
@@ -362,7 +362,7 @@ class Tapper:
                 continue
 
         if err != None and show_error_message == True:
-            if self.check_timeout_error(err):
+            if self.check_timeout_error(error) or self.check_error(error, "Service Unavailable"):
                 self.warning(f"Warning during getting user info: <magenta>Notpixel</magenta> server is not response.")
             else:
                 self.error(f"Unknown error during getting user info: <light-yellow>{err}</light-yellow>")
@@ -380,7 +380,7 @@ class Tapper:
                 return data
 
             except Exception as error:
-                if self.check_timeout_error(error):
+                if self.check_timeout_error(error) or self.check_error(error, "Service Unavailable"):
                     self.warning(f"Warning during processing mining status: <magenta>Notpixel</magenta> server is not response. Retrying..")
                     await asyncio.sleep(delay=random.randint(3, 6))
                     continue
@@ -401,7 +401,7 @@ class Tapper:
 
             return data['userBalance']
         except Exception as error:
-            if self.check_timeout_error(error):
+            if self.check_timeout_error(error) or self.check_error(error, "Service Unavailable"):
                 self.warning(f"Warning during processing balance: <magenta>Notpixel</magenta> server is not response.")
             else:
                 self.error(f"Unknown error during processing balance: <light-yellow>{error}</light-yellow>")
@@ -499,7 +499,7 @@ class Tapper:
 
                 return False
             except Exception as error:
-                if self.check_timeout_error(error):
+                if self.check_timeout_error(error) or self.check_error(error, "Service Unavailable"):
                     self.warning(f"Warning during subscribe to template: <magenta>Notpixel</magenta> server is not response. Retrying..")
                     await asyncio.sleep(delay=random.randint(3, 5))
                     continue
@@ -521,7 +521,7 @@ class Tapper:
                 else:
                     return None
             except Exception as error:
-                if self.check_timeout_error(error):
+                if self.check_timeout_error(error) or self.check_error(error, "Service Unavailable"):
                     self.warning(f"Warning during getting template info: <magenta>Notpixel</magenta> server is not response. Retrying..")
                     await asyncio.sleep(delay=random.randint(3, 5))
                     continue
@@ -544,7 +544,7 @@ class Tapper:
 
                 return data
             except Exception as error:
-                if self.check_timeout_error(error):
+                if self.check_timeout_error(error) or self.check_error(error, "Service Unavailable"):
                     self.warning(f"Warning during getting template info: <magenta>Notpixel</magenta> server is not response. Retrying..")
                     await asyncio.sleep(delay=random.randint(3, 5))
                     continue
@@ -631,7 +631,7 @@ class Tapper:
                                         await self.send_draw_request(http_client=http_client, update=(updated_x, updated_y, image_hex_color.upper()), template_id=curr_template_id)
                                         break
                 except Exception as e:
-                    if self.check_timeout_error(e):
+                    if self.check_timeout_error(e) or self.check_error(e, "Service Unavailable"):
                         status_data = await self.get_status(http_client=http_client, show_error_message=False)
 
                         if status_data:
@@ -655,7 +655,7 @@ class Tapper:
                         self.error(f"Unknown error during painting <cyan>[TEMPLATE MODE]</cyan>: {e}")
                         break
         except Exception as error:
-            if self.check_timeout_error(error):
+            if self.check_timeout_error(error) or self.check_error(error, "Service Unavailable"):
                 self.warning(f"Warning during painting <cyan>[TEMPLATE MODE]</cyan>: <magenta>Notpixel</magenta> server is not response. Go to sleep..")
             elif self.check_error(e, "Bad Request"):
                 self.warning(f"Warning during painting <cyan>[TEMPLATE MODE]</cyan>: <light-yellow>Bad Request</light-yellow>. Go to sleep..")
@@ -759,7 +759,7 @@ class Tapper:
                                 await asyncio.sleep(delay=random.randint(3, 6))
                             continue
                 except Exception as e:
-                    if self.check_timeout_error(e):
+                    if self.check_timeout_error(e) or self.check_error(e, "Service Unavailable"):
                         status_data = await self.get_status(http_client=http_client, show_error_message=False)
 
                         if status_data:
@@ -783,7 +783,7 @@ class Tapper:
                         self.error(f"Unknown error during painting <cyan>[TEMPLATE MODE]</cyan>: {e}")
                         break
         except Exception as error:
-            if self.check_timeout_error(error):
+            if self.check_timeout_error(error) or self.check_error(error, "Service Unavailable"):
                 self.warning(f"Warning during painting <cyan>[TEMPLATE MODE]</cyan>: <magenta>Notpixel</magenta> server is not response. Go to sleep..")
             elif self.check_error(e, "Bad Request"):
                 self.warning(f"Warning during painting <cyan>[TEMPLATE MODE]</cyan>: <light-yellow>Bad Request</light-yellow>. Go to sleep..")
@@ -836,7 +836,7 @@ class Tapper:
                             return
 
         except Exception as error:
-            if self.check_timeout_error(error):
+            if self.check_timeout_error(error) or self.check_error(error, "Service Unavailable"):
                 self.warning(f"Warning during upgrading: <magenta>Notpixel</magenta> server is not response.")
             else:
                 self.error(f"Unknown error during upgrading: <light-yellow>{error}</light-yellow>")
@@ -923,7 +923,7 @@ class Tapper:
                     await asyncio.sleep(delay=random.randint(3, 7))
 
         except Exception as error:
-            if self.check_timeout_error(error):
+            if self.check_timeout_error(error) or self.check_error(error, "Service Unavailable"):
                 self.warning(f"Warning during processing tasks: <magenta>Notpixel</magenta> server is not response.")
             else:
                 self.error(f"Unknown error during processing tasks: <light-yellow>{error}</light-yellow>")
@@ -953,7 +953,7 @@ class Tapper:
 
             return response_json['claimed']
         except Exception as error:
-            if self.check_timeout_error(error):
+            if self.check_timeout_error(error) or self.check_error(error, "Service Unavailable"):
                 self.warning(f"Warning during claiming reward: <magenta>Notpixel</magenta> server is not response.")
             else:
                 self.error(f"Unknown error during claiming reward: <light-yellow>{error}</light-yellow>")
@@ -1028,7 +1028,7 @@ class Tapper:
                 else:
                     self.warning(f"Something went wrong when joining squad: <magenta>{squad}</magenta>")
         except Exception as error:
-            if self.check_timeout_error(error):
+            if self.check_timeout_error(error) or self.check_error(error, "Service Unavailable"):
                 self.warning(f"Warning during joining squad: <magenta>Notpixel</magenta> server is not response.")
             else:
                 self.error(f"Unknown error during joining squad: <light-yellow>{error}</light-yellow>")
@@ -1113,7 +1113,7 @@ class Tapper:
                 await asyncio.sleep(delay=3)
 
             except Exception as error:
-                if self.check_timeout_error(error):
+                if self.check_timeout_error(error) or self.check_error(error, "Service Unavailable"):
                     self.warning(f"Warning during login: <magenta>Notpixel</magenta> server is not response.")
                     if tries_to_login > 0:
                         tries_to_login = tries_to_login - 1
