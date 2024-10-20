@@ -362,7 +362,7 @@ class Tapper:
                 continue
 
         if err != None and show_error_message == True:
-            if self.check_timeout_error(error) or self.check_error(error, "Service Unavailable"):
+            if self.check_timeout_error(err) or self.check_error(err, "Service Unavailable"):
                 self.warning(f"Warning during getting user info: <magenta>Notpixel</magenta> server is not response.")
             else:
                 self.error(f"Unknown error during getting user info: <light-yellow>{err}</light-yellow>")
@@ -657,7 +657,7 @@ class Tapper:
         except Exception as error:
             if self.check_timeout_error(error) or self.check_error(error, "Service Unavailable"):
                 self.warning(f"Warning during painting <cyan>[TEMPLATE MODE]</cyan>: <magenta>Notpixel</magenta> server is not response. Go to sleep..")
-            elif self.check_error(e, "Bad Request"):
+            elif self.check_error(error, "Bad Request"):
                 self.warning(f"Warning during painting <cyan>[TEMPLATE MODE]</cyan>: <light-yellow>Bad Request</light-yellow>. Go to sleep..")
             else:
                 if error:
@@ -785,7 +785,7 @@ class Tapper:
         except Exception as error:
             if self.check_timeout_error(error) or self.check_error(error, "Service Unavailable"):
                 self.warning(f"Warning during painting <cyan>[TEMPLATE MODE]</cyan>: <magenta>Notpixel</magenta> server is not response. Go to sleep..")
-            elif self.check_error(e, "Bad Request"):
+            elif self.check_error(error, "Bad Request"):
                 self.warning(f"Warning during painting <cyan>[TEMPLATE MODE]</cyan>: <light-yellow>Bad Request</light-yellow>. Go to sleep..")
             else:
                 if error:
