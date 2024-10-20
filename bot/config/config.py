@@ -36,7 +36,7 @@ class Settings(BaseSettings):
 
     ENABLE_SSL: bool = False
 
-    PAINT_REWARD_MAX: int = 5
+    PAINT_REWARD_MAX: int = 7
     ENERGY_LIMIT_MAX: int = 6
     RE_CHARGE_SPEED_MAX: int = 7
 
