@@ -408,7 +408,7 @@ class Tapper:
             await asyncio.sleep(delay=random.randint(3, 6))
             return None
 
-    async def get_image(self, http_client, url, image_headers, load_from_file=True):
+    async def get_image(self, http_client, url, image_headers, load_from_file=True, is_template=True):
         # Extract the image filename from the URL
         image_filename = os.path.join(self.image_directory, url.split("/")[-1])
 
@@ -425,6 +425,10 @@ class Tapper:
         # If not, download the image from the URL
         for _ in range(2):
             try:
+                if is_template:
+                    timestamp = time()
+                    url = f"{url}?time={int(timestamp)}"
+
                 async with http_client.get(url, headers=image_headers) as response:
                     if response.status == 200:
                         img_data = await response.read()
@@ -438,7 +442,7 @@ class Tapper:
                         raise Exception(f"Failed to download image from {url}, status: {response.status}")
             except Exception as error:
                 if self.check_error(error, 'Failed to download'):
-                    self.warning(f"Warning during loading template image: {url}. Retrying..")
+                    self.warning(f"Warning during loading template image: {url}. Retrying.. {error}")
                     await asyncio.sleep(delay=random.randint(5, 10))
                     continue
                 else:
@@ -672,7 +676,7 @@ class Tapper:
             image_headers = deepcopy(headers)
             image_headers['Host'] = 'image.notpx.app'
 
-            current_image = await self.get_image(http_client, current_image_url, image_headers=image_headers, load_from_file=False)  # Аргумент image_headers не потрібен
+            current_image = await self.get_image(http_client, current_image_url, image_headers=image_headers, load_from_file=False, is_template=False)  # Аргумент image_headers не потрібен
             return current_image
         except Exception as error:
             self.error(f"Unknown error during getting updated image: <light-yellow>{error}</light-yellow>")
@@ -1176,6 +1180,7 @@ class Tapper:
                                 if template_info_data:
                                     await asyncio.sleep(delay=random.randint(2, 5))
                                     image_url = template_info_data['url']
+                                    print(9999999, image_url)
                                     image_headers = deepcopy(headers)
                                     image_headers['Host'] = 'static.notpx.app'
                                     template_image = await self.get_image(http_client, image_url, image_headers=image_headers)
