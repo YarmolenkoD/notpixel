@@ -31,7 +31,7 @@ import aiohttp
 import json
 
 from .agents import generate_random_user_agent
-from .headers import headers, headers_notcoin, headers_socket
+from .headers import headers, headers_notcoin, headers_socket, headers_image
 from .helper import format_duration
 
 from bot.config import settings
@@ -63,10 +63,7 @@ class Tapper:
         self.template_info = {}
         self.image_directory = './bot/assets/templatesV2'
         self.custom_template_id = None
-
         self.session_ug_dict = self.load_user_agents() or []
-        self.templates = self.load_templates() or []
-
         headers['User-Agent'] = self.check_user_agent()
         headers_notcoin['User-Agent'] = headers['User-Agent']
 
@@ -128,23 +125,6 @@ class Tapper:
 
         except json.JSONDecodeError:
             logger.warning("User agents file is empty or corrupted.")
-
-        return []
-
-    def load_templates(self):
-        templates_list_file_name = "random-templates-list.json"
-
-        try:
-            with open(templates_list_file_name, 'r') as user_agents:
-                session_data = json.load(user_agents)
-                if isinstance(session_data, list):
-                    return session_data
-
-        except FileNotFoundError:
-            logger.warning("Templates list file not found, creating...")
-
-        except json.JSONDecodeError:
-            logger.warning("Templates list file is empty or corrupted.")
 
         return []
 
@@ -427,9 +407,9 @@ class Tapper:
             try:
                 if is_template:
                     timestamp = time()
-                    url = f"{url}?time={int(timestamp)}"
+                    url = f"{url}"
 
-                async with http_client.get(url, headers=image_headers) as response:
+                async with http_client.get(url, headers=image_headers, ssl=settings.ENABLE_SSL) as response:
                     if response.status == 200:
                         img_data = await response.read()
                         img = Image.open(io.BytesIO(img_data))
@@ -1160,30 +1140,29 @@ class Tapper:
                             'id': "Durov",
                         }
 
-                        if not self.custom_template_id and settings.ENABLE_RANDOM_CUSTOM_TEMPLATE and len(self.templates) > 0:
-                            custom_template = random.choice(self.templates)
-                            self.custom_template_id = custom_template.get('templateId', settings.CUSTOM_TEMPLATE_ID)
+                        if not self.custom_template_id and settings.ENABLE_RANDOM_CUSTOM_TEMPLATE and len(settings.RANDOM_TEMPLATE_IDS) > 0:
+                            self.custom_template_id = random.choice(settings.RANDOM_TEMPLATE_IDS)
                         elif settings.CUSTOM_TEMPLATE_ID:
                             self.custom_template_id = settings.CUSTOM_TEMPLATE_ID
 
                         if (settings.ENABLE_DRAW_CUSTOM_TEMPLATE or settings.ENABLE_RANDOM_CUSTOM_TEMPLATE) and self.custom_template_id:
                             curr_user_template = await self.get_user_current_template(http_client=http_client)
-                            await asyncio.sleep(delay=random.randint(2, 5))
+                            await asyncio.sleep(delay=random.randint(3, 6))
                             is_successfully_subscribed = True
                             if not curr_user_template or curr_user_template.get('id', 0) != self.custom_template_id:
                                 is_successfully_subscribed = await self.subscribe_to_template(http_client=http_client, template_id=self.custom_template_id)
                                 if is_successfully_subscribed:
                                     self.success(f"Successfully subscribed to the template | ID: <cyan>{self.custom_template_id}</cyan>")
-                                await asyncio.sleep(delay=random.randint(2, 5))
+                                await asyncio.sleep(delay=random.randint(4, 10))
                             if is_successfully_subscribed or True:
                                 template_info_data = await self.get_template_info(http_client=http_client, template_id=self.custom_template_id)
                                 if template_info_data:
-                                    await asyncio.sleep(delay=random.randint(2, 5))
+                                    await asyncio.sleep(delay=random.randint(4, 10))
                                     image_url = template_info_data['url']
-                                    print(9999999, image_url)
-                                    image_headers = deepcopy(headers)
+                                    image_headers = deepcopy(headers_image)
+                                    image_headers['User-Agent'] = headers['User-Agent']
                                     image_headers['Host'] = 'static.notpx.app'
-                                    template_image = await self.get_image(http_client, image_url, image_headers=image_headers)
+                                    template_image = await self.get_image(http_client, image_url, image_headers=image_headers, is_template=True)
 
                                     self.template_info = {
                                         'x': template_info_data['x'],
@@ -1198,7 +1177,7 @@ class Tapper:
                             image_headers = deepcopy(headers)
                             image_headers['Host'] = 'app.notpx.app'
                             self.template_info['image'] = await self.get_image(http_client, image_url, image_headers=image_headers)
-                            await asyncio.sleep(delay=random.randint(2, 5))
+                            await asyncio.sleep(delay=random.randint(4, 8))
 
                         if self.template_info['image']:
                             if settings.ENABLE_SOCKETS:
