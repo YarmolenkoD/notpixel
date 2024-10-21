@@ -30,6 +30,7 @@ class Settings(BaseSettings):
 
     ENABLE_SOCKETS: bool = False
     ENABLE_CHECK_UPDATED_IMAGE_MODE: bool = False
+    ENABLE_SERVER_MODE: bool = True
 
     ENABLE_RANDOM_CUSTOM_TEMPLATE: bool = True
     RANDOM_TEMPLATE_IDS: list[int] = [

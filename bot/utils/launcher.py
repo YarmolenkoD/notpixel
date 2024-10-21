@@ -28,9 +28,9 @@ My other bots:
 💩Boinkers - https://github.com/YarmolenkoD/boinkers
 🚀Moonbix - https://github.com/YarmolenkoD/moonbix [GAME IS NOT WORKING]
 
-NEW ENV VARIABLES:
+NEW ENV VARIABLES TO GET MORE +12 POINTS:
 
-ENABLE_CHECK_UPDATED_IMAGE_MODE=False (Default = False)
+ENABLE_SERVER_MODE=True (Default = True)
 
 Select an action:
 
