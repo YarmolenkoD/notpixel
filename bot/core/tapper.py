@@ -65,6 +65,7 @@ class Tapper:
         self.image_directory = './bot/assets/templatesV3'
         self.custom_template_id = None
         self.template_id_to_join = None
+        self.mode = 'CUSTOM TEMPLATE'
         self.session_ug_dict = self.load_user_agents() or []
         headers['User-Agent'] = self.check_user_agent()
         headers_notcoin['User-Agent'] = headers['User-Agent']
@@ -454,9 +455,9 @@ class Tapper:
         self.current_user_balance = new_balance
 
         if template_id:
-            self.success(f"Painted (X: <cyan>{x}</cyan>, Y: <cyan>{y}</cyan>) with color <light-blue>{color}</light-blue> 🎨️ | Balance <light-green>{'{:,.3f}'.format(self.current_user_balance)}</light-green> <magenta>(+{added_points} pix)</magenta> 🔳 | Template <cyan>{template_id}</cyan>")
+            self.success(f" <cyan>[{self.mode}]</cyan> Painted (X: <cyan>{x}</cyan>, Y: <cyan>{y}</cyan>) with color <light-blue>{color}</light-blue> 🎨️ | Balance <light-green>{'{:,.3f}'.format(self.current_user_balance)}</light-green> <magenta>(+{added_points} pix)</magenta> 🔳 | Template <cyan>{template_id}</cyan>")
         else:
-            self.success(f"Painted (X: <cyan>{x}</cyan>, Y: <cyan>{y}</cyan>) with color <light-blue>{color}</light-blue> 🎨️ | Balance <light-green>{'{:,.3f}'.format(self.current_user_balance)}</light-green> <magenta>(+{added_points} pix)</magenta> 🔳")
+            self.success(f" <cyan>[{self.mode}]</cyan> Painted (X: <cyan>{x}</cyan>, Y: <cyan>{y}</cyan>) with color <light-blue>{color}</light-blue> 🎨️ | Balance <light-green>{'{:,.3f}'.format(self.current_user_balance)}</light-green> <magenta>(+{added_points} pix)</magenta> 🔳")
 
     def check_timeout_error(self, error):
          try:
@@ -627,31 +628,31 @@ class Tapper:
                             self.current_user_balance = status_data['userBalance']
 
                         if tries > 0 and charges > 0:
-                            self.warning(f"Warning during painting <cyan>[TEMPLATE MODE]</cyan>: <magenta>Notpixel</magenta> server is not response. Retrying..")
+                            self.warning(f"Warning during painting <cyan>[{self.mode}]</cyan>: <magenta>Notpixel</magenta> server is not response. Retrying..")
                             tries = tries - 1
                             sleep_time = random.randint(10, 20)
                             self.info(f"Restart drawing in {round(sleep_time)} seconds...")
                             await asyncio.sleep(delay=sleep_time)
                             continue
                         else:
-                            self.warning(f"Warning during painting <cyan>[TEMPLATE MODE]</cyan>: <magenta>Notpixel</magenta> server is not response. Go to sleep..")
+                            self.warning(f"Warning during painting <cyan>[{self.mode}]</cyan>: <magenta>Notpixel</magenta> server is not response. Go to sleep..")
                             break
                     elif self.check_error(e, "Bad Request"):
-                        self.warning(f"Warning during painting <cyan>[TEMPLATE MODE]</cyan>: <light-yellow>Bad Request</light-yellow>. Go to sleep..")
+                        self.warning(f"Warning during painting <cyan>[{self.mode}]</cyan>: <light-yellow>Bad Request</light-yellow>. Go to sleep..")
                         break
                     else:
-                        self.error(f"Unknown error during painting <cyan>[TEMPLATE MODE]</cyan>: {e}")
+                        self.error(f"Unknown error during painting <cyan>[{self.mode}]</cyan>: {e}")
                         break
         except Exception as error:
             if self.check_timeout_error(error) or self.check_error(error, "Service Unavailable"):
-                self.warning(f"Warning during painting <cyan>[TEMPLATE MODE]</cyan>: <magenta>Notpixel</magenta> server is not response. Go to sleep..")
+                self.warning(f"Warning during painting <cyan>[{self.mode}]</cyan>: <magenta>Notpixel</magenta> server is not response. Go to sleep..")
             elif self.check_error(error, "Bad Request"):
-                self.warning(f"Warning during painting <cyan>[TEMPLATE MODE]</cyan>: <light-yellow>Bad Request</light-yellow>. Go to sleep..")
+                self.warning(f"Warning during painting <cyan>[{self.mode}]</cyan>: <light-yellow>Bad Request</light-yellow>. Go to sleep..")
             else:
                 if error:
-                    self.error(f"Unknown error during painting <cyan>[TEMPLATE MODE]</cyan>: <light-yellow>{error}</light-yellow>")
+                    self.error(f"Unknown error during painting <cyan>[{self.mode}]</cyan>: <light-yellow>{error}</light-yellow>")
                 else:
-                    self.error(f"Unknown error during painting <cyan>[TEMPLATE MODE]</cyan>.")
+                    self.error(f"Unknown error during painting <cyan>[{self.mode}]</cyan>.")
             await asyncio.sleep(delay=random.randint(2, 5))
 
     async def get_updated_image(self, http_client: aiohttp.ClientSession):
@@ -758,31 +759,31 @@ class Tapper:
                             self.current_user_balance = status_data['userBalance']
 
                         if tries > 0 and charges > 0:
-                            self.warning(f"Warning during painting <cyan>[TEMPLATE MODE]</cyan>: <magenta>Notpixel</magenta> server is not response. Retrying..")
+                            self.warning(f"Warning during painting <cyan>[{self.mode}]</cyan>: <magenta>Notpixel</magenta> server is not response. Retrying..")
                             tries = tries - 1
                             sleep_time = random.randint(10, 20)
                             self.info(f"Restart drawing in {round(sleep_time)} seconds...")
                             await asyncio.sleep(delay=sleep_time)
                             continue
                         else:
-                            self.warning(f"Warning during painting <cyan>[TEMPLATE MODE]</cyan>: <magenta>Notpixel</magenta> server is not response. Go to sleep..")
+                            self.warning(f"Warning during painting <cyan>[{self.mode}]</cyan>: <magenta>Notpixel</magenta> server is not response. Go to sleep..")
                             break
                     elif self.check_error(e, "Bad Request"):
-                        self.warning(f"Warning during painting <cyan>[TEMPLATE MODE]</cyan>: <light-yellow>Bad Request</light-yellow>. Go to sleep..")
+                        self.warning(f"Warning during painting <cyan>[{self.mode}]</cyan>: <light-yellow>Bad Request</light-yellow>. Go to sleep..")
                         break
                     else:
-                        self.error(f"Unknown error during painting <cyan>[TEMPLATE MODE]</cyan>: {e}")
+                        self.error(f"Unknown error during painting <cyan>[{self.mode}]</cyan>: {e}")
                         break
         except Exception as error:
             if self.check_timeout_error(error) or self.check_error(error, "Service Unavailable"):
-                self.warning(f"Warning during painting <cyan>[TEMPLATE MODE]</cyan>: <magenta>Notpixel</magenta> server is not response. Go to sleep..")
+                self.warning(f"Warning during painting <cyan>[{self.mode}]</cyan>: <magenta>Notpixel</magenta> server is not response. Go to sleep..")
             elif self.check_error(error, "Bad Request"):
-                self.warning(f"Warning during painting <cyan>[TEMPLATE MODE]</cyan>: <light-yellow>Bad Request</light-yellow>. Go to sleep..")
+                self.warning(f"Warning during painting <cyan>[{self.mode}]</cyan>: <light-yellow>Bad Request</light-yellow>. Go to sleep..")
             else:
                 if error:
-                    self.error(f"Unknown error during painting <cyan>[TEMPLATE MODE]</cyan>: <light-yellow>{error}</light-yellow>")
+                    self.error(f"Unknown error during painting <cyan>[{self.mode}]</cyan>: <light-yellow>{error}</light-yellow>")
                 else:
-                    self.error(f"Unknown error during painting <cyan>[TEMPLATE MODE]</cyan>.")
+                    self.error(f"Unknown error during painting <cyan>[{self.mode}]</cyan>.")
             await asyncio.sleep(delay=random.randint(2, 5))
 
     async def draw_server_mode(self, http_client: aiohttp.ClientSession, retries=20):
@@ -822,7 +823,7 @@ class Tapper:
 
         except Exception as error:
             if self.check_timeout_error(error) or self.check_error(error, "Service Unavailable") or self.check_error(error, "Internal Server Error"):
-                self.warning(f"Warning during drawing [SERVER MODE]: <magenta>Notpixel</magenta> server is not response. Retrying..")
+                self.warning(f"Warning during drawing <cyan>[{self.mode}]</cyan>: <magenta>Notpixel</magenta> server is not response. Retrying..")
             await asyncio.sleep(delay=10)
             if retries > 0:
                 await self.draw_server_mode(http_client=http_client, retries=retries-1)
@@ -1186,6 +1187,13 @@ class Tapper:
                 await asyncio.sleep(delay=random.randint(2, 5))
 
                 if user is not None:
+                    self.mode = 'CUSTOM TEMPLATE MODE'
+
+                    if settings.ENABLE_SERVER_MODE:
+                        self.mode = 'SERVER MODE'
+                    elif settings.ENABLE_RANDOM_CUSTOM_TEMPLATE:
+                        self.mode = 'RANDOM TEMPLATE MODE'
+
                     self.user = user
                     current_balance = await self.get_balance(http_client=http_client)
                     repaints = user['repaints']
@@ -1209,11 +1217,11 @@ class Tapper:
                                 await asyncio.sleep(delay=random.randint(4, 10))
                                 is_successfully_subscribed = await self.subscribe_to_template(http_client=http_client, template_id=self.template_id_to_join)
                                 if is_successfully_subscribed:
-                                    self.success(f"Successfully subscribed to the template <cyan>[SERVER MODE]</cyan> | ID: <cyan>{self.template_id_to_join}</cyan>")
+                                    self.success(f"Successfully subscribed to the template <cyan>[{self.mode}]</cyan> | ID: <cyan>{self.template_id_to_join}</cyan>")
                                     await asyncio.sleep(delay=random.randint(4, 10))
                                 else:
                                     delay = random.randint(60, 120)
-                                    self.info(f"Joining to template restart in {delay} seconds. <cyan>[SERVER MODE]</cyan>")
+                                    self.info(f"Joining to template restart in {delay} seconds. <cyan>[{self.mode}]</cyan>")
                                     await asyncio.sleep(delay=delay)
                                     token_live_time = 0
                                     continue

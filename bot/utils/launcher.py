@@ -30,7 +30,7 @@ My other bots:
 
 NEW ENV VARIABLES TO GET MORE +12 POINTS:
 
-ENABLE_SERVER_MODE=True (Default = True)
+ENABLE_SERVER_MODE=True (Default = True) (WORK ONLY WITH FEW HARDCODED TEMPLATES)
 
 Select an action:
 
