@@ -8,6 +8,7 @@ attrs==23.2.0
 beautifulsoup4==4.12.3
 better-proxy==1.1.5
 Brotli==1.1.0
+centrifuge-python==0.3.1
 colorama==0.4.6
 DateTime==5.5
 fake-useragent==1.5.1
@@ -18,6 +19,7 @@ Js2Py==0.74
 loguru==0.7.2
 multidict==6.0.5
 pillow==10.4.0
+protobuf==4.25.5
 pyaes==1.6.1
 pycryptodome==3.20.0
 pydantic==2.6.4
@@ -35,7 +37,7 @@ TgCrypto==1.2.5
 typing_extensions==4.11.0
 tzdata==2024.1
 tzlocal==5.2
-websockets==12.0
+websockets==11.0.3
 win32-setctime==1.1.0
 yarl==1.9.4
 zope.interface==6.4.post2

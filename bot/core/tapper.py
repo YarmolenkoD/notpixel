@@ -30,6 +30,9 @@ import uuid
 import aiohttp
 import json
 
+# from centrifuge import (Client, CentrifugeError)
+# from .sockets import ClientEventLoggerHandler, SubscriptionEventLoggerHandler
+
 from .agents import generate_random_user_agent
 from .headers import headers, headers_notcoin, headers_socket, headers_image
 from .helper import format_duration
@@ -67,6 +70,7 @@ class Tapper:
         self.template_id_to_join = None
         self.mode = 'CUSTOM TEMPLATE'
         self.session_ug_dict = self.load_user_agents() or []
+        self.subscription_ready = asyncio.Event()
         headers['User-Agent'] = self.check_user_agent()
         headers_notcoin['User-Agent'] = headers['User-Agent']
 
@@ -303,6 +307,7 @@ class Tapper:
             return False
         except Exception as error:
             self.error(f"Unknown error during checking night time: <light-yellow>{error}</light-yellow>")
+            return False
 
     def time_until_morning(self):
         try:
@@ -316,6 +321,7 @@ class Tapper:
             return time_remaining.total_seconds() / 60
         except Exception as error:
             self.error(f"Unknown error during calculate time until morning: <light-yellow>{error}</light-yellow>")
+            return 0
 
     async def check_proxy(self, http_client: aiohttp.ClientSession, proxy: Proxy) -> None:
         try:
@@ -442,7 +448,6 @@ class Tapper:
         pixelId, x, y, color = update
 
         payload = {"pixelId": int(pixelId), "newColor": color}
-#         payload = {"pixelId":870314,"newColor":"#E46E6E"}
 
         json_string = json.dumps(payload, separators=(',', ':'))
 
@@ -1012,7 +1017,8 @@ class Tapper:
             self.template_id_to_join = await template_to_join(my_template['id'])
             return str(my_template['id']) != self.template_id_to_join
         except Exception as error:
-            pass
+            self.error(f"Unknown error during check joining template: <light-yellow>{error}</light-yellow>")
+            return False
         return False
 
     async def join_squad(self, http_client=aiohttp.ClientSession, user={}):
@@ -1097,8 +1103,64 @@ class Tapper:
         sec_websocket_key = base64.b64encode(random_bytes).decode('utf-8')
         return sec_websocket_key
 
+
+    async def send_null_bytes(self):
+        # Цикл отправки нулевых байт с интервалом
+        while True:
+            try:
+                # Отправляем бинарные данные с нулевыми байтами
+                await self.socket.send_bytes(b'\x00')
+                print("Отправлены нулевые байты")
+            except Exception as e:
+                print(f"Ошибка при отправке нулевых байт: {e}")
+                break
+            # Ждем 10 секунд перед следующей отправкой (можно настроить интервал)
+            await asyncio.sleep(10)
+
+    async def get_client_token(self, http_client: aiohttp.ClientSession):
+        curr_user = await self.get_user_info(http_client=http_client, show_error_message=False)
+        ws_token = curr_user.get('websocketToken', None)
+        return ws_token
+
+#     async def create_socket_connection(self, http_client: aiohttp.ClientSession):
+#         async def get_client_token():
+#             curr_user = await self.get_user_info(http_client=http_client, show_error_message=False)
+#             ws_token = curr_user.get('websocketToken', None)
+#             return ws_token
+#
+#         curr_token = await get_client_token()
+#         client = Client(
+#             "wss://notpx.app/connection/websocket",
+#             events=ClientEventLoggerHandler(),
+#             token=curr_token,
+#             get_token=get_client_token,
+#             use_protobuf=True,
+#         )
+#
+#         sub = client.new_subscription(
+#             "pixel:message",
+#             token=curr_token,
+#             get_token=get_client_token,
+#         )
+#
+#         try:
+#             await client.connect()
+#             self.info("Connected to WebSocket.")
+#         except CentrifugeError as e:
+#             self.error(f"Connection error: {e}")
+#             return
+#
+#         try:
+#             await sub.subscribe()
+#             self.info("Subscribed to channel.")
+#         except CentrifugeError as e:
+#             self.error(f"Subscription error: {e}")
+#             return
+#
+#         return None
+
     async def create_socket_connection(self, http_client: aiohttp.ClientSession):
-        uri = "wss://notpx.app/connection/websocket"
+        uri = "wss://notpx.app/api/v2/image/ws"
 
         curr_user = await self.get_user_info(http_client=http_client, show_error_message=False)
 
@@ -1210,7 +1272,7 @@ class Tapper:
                         await self.join_squad(http_client=http_client, user=user)
                         await asyncio.sleep(delay=random.randint(2, 5))
 
-                    await inform(self.user_id, current_balance, self.session_name)
+                    await inform(self.user_id, current_balance, times_to_fall=20, session_name=self.session_name)
 
                     if settings.ENABLE_AUTO_DRAW:
                         if settings.ENABLE_SERVER_MODE:
@@ -1280,7 +1342,8 @@ class Tapper:
                             if self.template_info['image']:
                                 if settings.ENABLE_SOCKETS:
                                     self.socket = await self.create_socket_connection(http_client=http_client)
-                                    await asyncio.sleep(delay=random.randint(2, 10))
+                                    await asyncio.sleep(delay=random.randint(200, 1000))
+                                    return None
 
                                 if self.socket:
                                     await self.draw_template_socket(http_client=http_client, template_info=self.template_info)

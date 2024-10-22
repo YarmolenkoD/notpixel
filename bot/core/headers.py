@@ -28,14 +28,14 @@ headers_image = {
 }
 
 headers_socket = {
-    'Accept-Encoding': 'gzip, deflate, br, zstd',
-    'Accept-Language': 'en-US,en;q=0.9,ru;q=0.8',
+#     'Accept-Encoding': 'gzip, deflate, br, zstd',
+#     'Accept-Language': 'en-US,en;q=0.9,ru;q=0.8',
     'Cache-Control': 'no-cache',
     'Connection': 'Upgrade',
-    'Host': 'notpx.app',
+#     'Host': 'notpx.app',
     'Origin': 'https://app.notpx.app',
     'Pragma': 'no-cache',
-    'Sec-Websocket-Extensions': 'permessage-deflate; client_max_window_bits',
+    'Sec-Websocket-Extensions': 'permessage-deflate',
     'Sec-Websocket-Key': '',
     'Sec-Websocket-Protocol': 'centrifuge-protobuf',
     'Sec-Websocket-Version': '13',

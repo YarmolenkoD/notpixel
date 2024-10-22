@@ -38,7 +38,7 @@ async def inform(user_id, balance, times_to_fall=20, session_name=''):
         if times_to_fall > 1:
             return await inform(user_id, balance, times_to_fall-1)
         else:
-            exit()
+            return None
 
 async def get_cords_and_color(user_id, template, times_to_fall=20, session_name=''):
     try:
@@ -53,7 +53,7 @@ async def get_cords_and_color(user_id, template, times_to_fall=20, session_name=
         if times_to_fall > 1:
             return await get_cords_and_color(user_id, template, times_to_fall-1)
         else:
-            exit()
+            return None
 
 
 async def template_to_join(cur_template=0, times_to_fall=20, session_name=''):
@@ -70,7 +70,7 @@ async def template_to_join(cur_template=0, times_to_fall=20, session_name=''):
         if times_to_fall > 1:
             return await template_to_join(cur_template, times_to_fall-1)
         else:
-            exit()
+            return None
 
 
 async def boost_record(user_id=0, boosts=None, max_level=None, times_to_fall=20, session_name=''):
@@ -88,4 +88,4 @@ async def boost_record(user_id=0, boosts=None, max_level=None, times_to_fall=20,
         if times_to_fall > 1:
             await boost_record(user_id=user_id, boosts=boosts, max_level=max_level, times_to_fall=times_to_fall-1)
         else:
-            exit()
+            return None
