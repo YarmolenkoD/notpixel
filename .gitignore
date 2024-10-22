@@ -170,6 +170,7 @@ sessions*/
 *.session
 
 bot/assets/templates
+bot/assets/templatesV3
 
 user_agents.json
 
