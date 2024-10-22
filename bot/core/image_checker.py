@@ -65,7 +65,7 @@ async def template_to_join(cur_template=0, times_to_fall=20, session_name=''):
                     return resp['template']
                 response.raise_for_status()
     except Exception as e:
-        logger.error(f"<light-yellow>{session_name or user_id}</light-yellow> | ⚠️ Server unreachable, retrying in 30 seconds, attempt {20 - times_to_fall + 1}/20")
+        logger.error(f"<light-yellow>{session_name}</light-yellow> | ⚠️ Server unreachable, retrying in 30 seconds, attempt {20 - times_to_fall + 1}/20")
         await asyncio.sleep(30)
         if times_to_fall > 1:
             return await template_to_join(cur_template, times_to_fall-1)

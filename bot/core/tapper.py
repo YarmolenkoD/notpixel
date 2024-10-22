@@ -1014,7 +1014,7 @@ class Tapper:
     async def check_join_template(self, http_client: aiohttp.ClientSession):
         try:
             my_template = await self.get_user_current_template(http_client)
-            self.template_id_to_join = await template_to_join(my_template['id'])
+            self.template_id_to_join = await template_to_join(my_template['id'], times_to_fall=20, session_name=self.session_name)
             return str(my_template['id']) != self.template_id_to_join
         except Exception as error:
             self.error(f"Unknown error during check joining template: <light-yellow>{error}</light-yellow>")
