@@ -748,6 +748,9 @@ class Tapper:
                                 updated_image = await self.get_updated_image(http_client=http_client)
                                 updated_image_get_time = time()
 
+                            if settings.ENABLE_CHECK_UPDATED_IMAGE_MODE:
+                                updated_image = await self.get_updated_image(http_client=http_client)
+
                             updated_image_pixel = None
                             updated_image_hex_color = None
 
@@ -760,7 +763,8 @@ class Tapper:
 
                             if updated_image_hex_color != image_hex_color:
                                 charges = charges - 1
-                                pixelId = int(f'{curr_start_x + curr_x}{curr_start_y + curr_y}')+1
+                                pixelId = int(f'{curr_start_y + curr_y}{curr_start_x + curr_x}')+1
+
                                 await self.send_draw_request(http_client=http_client, update=(pixelId, curr_start_x + curr_x, curr_start_y + curr_y, image_hex_color.upper()), template_id=curr_template_id)
                                 await asyncio.sleep(delay=random.randint(4, 8))
                             else:
@@ -1272,10 +1276,9 @@ class Tapper:
                         await self.join_squad(http_client=http_client, user=user)
                         await asyncio.sleep(delay=random.randint(2, 5))
 
-                    await inform(self.user_id, current_balance, times_to_fall=20, session_name=self.session_name)
-
-                    if settings.ENABLE_AUTO_DRAW:
-                        if settings.ENABLE_SERVER_MODE:
+                    if settings.ENABLE_AUTO_DRAW == True:
+                        if settings.ENABLE_SERVER_MODE == True:
+                            await inform(self.user_id, current_balance, times_to_fall=20, session_name=self.session_name)
                             check = await self.check_join_template(http_client=http_client)
                             if check:
                                 await asyncio.sleep(delay=random.randint(4, 10))
@@ -1299,12 +1302,12 @@ class Tapper:
                                 'id': "Durov",
                             }
 
-                            if not self.custom_template_id and settings.ENABLE_RANDOM_CUSTOM_TEMPLATE and len(settings.RANDOM_TEMPLATE_IDS) > 0:
+                            if not self.custom_template_id and settings.ENABLE_RANDOM_CUSTOM_TEMPLATE == True and len(settings.RANDOM_TEMPLATE_IDS) > 0:
                                 self.custom_template_id = random.choice(settings.RANDOM_TEMPLATE_IDS)
                             elif settings.CUSTOM_TEMPLATE_ID:
                                 self.custom_template_id = settings.CUSTOM_TEMPLATE_ID
 
-                            if (settings.ENABLE_DRAW_CUSTOM_TEMPLATE or settings.ENABLE_RANDOM_CUSTOM_TEMPLATE) and self.custom_template_id:
+                            if (settings.ENABLE_DRAW_CUSTOM_TEMPLATE == True or settings.ENABLE_RANDOM_CUSTOM_TEMPLATE == True) and self.custom_template_id:
                                 curr_user_template = await self.get_user_current_template(http_client=http_client)
                                 await asyncio.sleep(delay=random.randint(3, 6))
                                 is_successfully_subscribed = True
@@ -1340,7 +1343,7 @@ class Tapper:
                                 await asyncio.sleep(delay=random.randint(4, 8))
 
                             if self.template_info['image']:
-                                if settings.ENABLE_SOCKETS:
+                                if settings.ENABLE_SOCKETS == True:
                                     self.socket = await self.create_socket_connection(http_client=http_client)
                                     await asyncio.sleep(delay=random.randint(200, 1000))
                                     return None
@@ -1351,17 +1354,17 @@ class Tapper:
                                     await self.draw_template(http_client=http_client, template_info=self.template_info)
                             await asyncio.sleep(delay=random.randint(2, 5))
 
-                    if settings.ENABLE_AUTO_UPGRADE:
+                    if settings.ENABLE_AUTO_UPGRADE == True:
                         await self.upgrade(http_client=http_client)
                         await asyncio.sleep(delay=random.randint(2, 5))
 
-                    if settings.ENABLE_CLAIM_REWARD:
+                    if settings.ENABLE_CLAIM_REWARD == True:
                         reward = await self.claim_mine(http_client=http_client)
                         if reward is not None and reward != 0:
                             self.info(f"Claim reward: <light-green>{'{:,.3f}'.format(reward)}</light-green> 🔳")
                         await asyncio.sleep(delay=random.randint(2, 5))
 
-                    if settings.ENABLE_AUTO_TASKS:
+                    if settings.ENABLE_AUTO_TASKS == True:
                         await self.run_tasks(http_client=http_client)
                         await asyncio.sleep(delay=random.randint(2, 5))
 
