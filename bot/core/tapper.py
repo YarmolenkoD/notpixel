@@ -748,9 +748,6 @@ class Tapper:
                                 updated_image = await self.get_updated_image(http_client=http_client)
                                 updated_image_get_time = time()
 
-                            if settings.ENABLE_CHECK_UPDATED_IMAGE_MODE:
-                                updated_image = await self.get_updated_image(http_client=http_client)
-
                             updated_image_pixel = None
                             updated_image_hex_color = None
 
