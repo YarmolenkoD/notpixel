@@ -51,7 +51,8 @@ class Settings(BaseSettings):
 
     USE_PROXY_FROM_FILE: bool = True
 
-
+    SHOW_TEMPLATES_LIST: bool = False # DON'T TOUCH IT
+    OPEN_TEMPLATES_LIST_IN_BROWSER: bool = True
 
     # ------ LEGACY CONFIGURATIONS ------
     ENABLE_DRAW_ART: bool = False

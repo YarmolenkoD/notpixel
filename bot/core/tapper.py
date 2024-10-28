@@ -9,6 +9,8 @@ from copy import deepcopy
 from PIL import Image
 import io
 import ssl
+import glob
+import cloudscraper
 
 from json import dump as dp, loads as ld
 from aiocfscrape import CloudflareScraper
@@ -40,6 +42,7 @@ from .image_checker import get_cords_and_color, template_to_join, inform, boost_
 
 from bot.config import settings
 from bot.utils import logger
+from bot.utils.templates import generate_template_html_page
 from bot.utils.logger import SelfTGClient
 from bot.exceptions import InvalidSession
 
@@ -65,12 +68,17 @@ class Tapper:
         self.socket_task = None
         self.current_user_balance = 0
         self.template_info = {}
-        self.image_directory = './bot/assets/templatesV3'
+        self.image_directory = './bot/assets/templates'
         self.custom_template_id = None
         self.template_id_to_join = None
         self.mode = 'CUSTOM TEMPLATE'
         self.session_ug_dict = self.load_user_agents() or []
         self.subscription_ready = asyncio.Event()
+        self.image_scraper = None
+        self.image_scraper_proxies = None
+        self.access_token_created_time = time()
+        self.token_live_time = random.randint(500, 900)
+
         headers['User-Agent'] = self.check_user_agent()
         headers_notcoin['User-Agent'] = headers['User-Agent']
 
@@ -327,9 +335,15 @@ class Tapper:
         try:
             response = await http_client.get(url='https://httpbin.org/ip', timeout=aiohttp.ClientTimeout(5))
             ip = (await response.json()).get('origin')
-            self.info(f"Proxy IP: {ip}")
+            if settings.SHOW_TEMPLATES_LIST:
+                logger.info(f"Proxy IP: {ip}")
+            else:
+                self.info(f"Proxy IP: {ip}")
         except Exception as error:
-            self.error(f"Proxy: {proxy} | Error: {error}")
+            if settings.SHOW_TEMPLATES_LIST:
+                logger.error(f"Proxy: {proxy} | Error: {error}")
+            else:
+                self.error(f"Proxy: {proxy} | Error: {error}")
 
     async def get_user_info(self, http_client: aiohttp.ClientSession, show_error_message: bool):
         ssl = settings.ENABLE_SSL
@@ -415,26 +429,52 @@ class Tapper:
                 img.load()  # Load the image data
                 return img
         except Exception as error:
-            self.error(f"Failed to load image from file: {image_filename} | Error: {error}")
+            self.error(f"Failed to load image from file: {image_filename} | Error: {error} | Please use other template ID")
 
+        tries_count = 0
         # If not, download the image from the URL
         for _ in range(2):
+            tries_count = tries_count + 1
             try:
-                if is_template:
-                    timestamp = time()
-                    url = f"{url}"
+                if self.image_scraper:
+                    response = self.image_scraper.get(url, headers=image_headers, proxies=self.image_scraper_proxies)
 
-                async with http_client.get(url, headers=image_headers, ssl=settings.ENABLE_SSL) as response:
-                    if response.status == 200:
-                        img_data = await response.read()
+                    if response.status_code == 200:
+                        img_data = response.content
                         img = Image.open(io.BytesIO(img_data))
 
                         # Save the image to the file system
                         if load_from_file:
                             img.save(image_filename)
+
+                            if is_template:
+                                self.success(f"Template image from <cyan>{url}</cyan>, successfully loaded and saved to <cyan>{image_filename}</cyan>.")
                         return img
                     else:
-                        raise Exception(f"Failed to download image from {url}, status: {response.status}")
+                        if tries_count > 1:
+                            self.warning(f"Failed to download image from {url}, status: {response.status_code} | Please use other template ID")
+                        else:
+                            self.warning(f"Failed to download image from {url}, status: {response.status_code}")
+                else:
+                    async with http_client.get(url, headers=image_headers) as response:
+                        if response.status == 200:
+                            img_data = await response.read()
+                            img = Image.open(io.BytesIO(img_data))
+
+                            # Save the image to the file system
+                            if load_from_file:
+                                img.save(image_filename)
+
+                                if is_template:
+                                    self.success(f"Template image from <cyan>{url}</cyan>, successfully loaded and saved to <cyan>{image_filename}</cyan>.")
+
+                            return img
+                        else:
+                            if tries_count > 1:
+                                self.warning(f"Failed to download image from {url}, status: {response.status} | Please use other template ID")
+                            else:
+                                self.warning(f"Failed to download image from {url}, status: {response.status}")
+
             except Exception as error:
                 if self.check_error(error, 'Failed to download'):
                     self.warning(f"Warning during loading template image: {url}. Retrying.. {error}")
@@ -443,6 +483,19 @@ class Tapper:
                 else:
                     self.error(f"Error during loading template image: {url} | Error: {error}")
                     return None
+
+    async def clean_images_cache(self):
+        try:
+            png_files = glob.glob(os.path.join(self.image_directory, '*.png'))
+
+            if len(png_files) > 0:
+                # Delete each .png file
+                for file_path in png_files:
+                    os.remove(file_path)
+
+                self.success(f"Images cache directory successfully cleaned.")
+        except Exception as error:
+            return None
 
     async def send_draw_request(self, http_client: aiohttp.ClientSession, update, template_id):
         pixelId, x, y, color = update
@@ -706,7 +759,6 @@ class Tapper:
 
             self.current_user_balance = status_data['userBalance']
 
-
             if charges > 0:
                 self.info(f"Energy: <magenta>{charges}</magenta>/<cyan>{maxCharges}</cyan> ⚡️")
             else:
@@ -715,15 +767,14 @@ class Tapper:
 
             tries = 2
 
-            random_x_offset = random.randint(0, curr_image_size - 10)
-            random_y_offset = random.randint(0, curr_image_size - 10)
+            random_x_offset = random.randint(50, curr_image_size - 10)
+            random_y_offset = random.randint(50, curr_image_size - 10)
 
             updated_image = None
 
             updated_image_get_time = 0
-            updated_image_live_time = random.randint(10, 20)
+            updated_image_live_time = random.randint(5, 10)
 
-            # EXPERIMENTAL MODE
             if settings.ENABLE_CHECK_UPDATED_IMAGE_MODE:
                 updated_image = await self.get_updated_image(http_client=http_client)
                 updated_image_get_time = time()
@@ -750,6 +801,8 @@ class Tapper:
 
                             updated_image_pixel = None
                             updated_image_hex_color = None
+
+                            self.info(f"{curr_x}, {curr_y}")
 
                             if updated_image:
                                 updated_image_pixel = updated_image.getpixel((curr_x, curr_y))
@@ -1024,11 +1077,11 @@ class Tapper:
 
     async def join_squad(self, http_client=aiohttp.ClientSession, user={}):
         try:
-            current_squad_slug = user['squad']['slug']
+            current_squad_slug = user.get('squad', {}).get('slug', None)
 
-            if settings.ENABLE_AUTO_JOIN_TO_SQUAD_CHANNEL and settings.SQUAD_SLUG and current_squad_slug != settings.SQUAD_SLUG:
+            if settings.ENABLE_AUTO_JOIN_TO_SQUAD and settings.SQUAD_SLUG and current_squad_slug != settings.SQUAD_SLUG:
                 try:
-                    if self.already_joined_squad_channel != settings.SQUAD_SLUG:
+                    if settings.ENABLE_AUTO_JOIN_TO_SQUAD_CHANNEL and self.already_joined_squad_channel != settings.SQUAD_SLUG:
                         if not self.tg_client.is_connected:
                             await self.tg_client.connect()
                             await asyncio.sleep(delay=random.randint(10, 20))
@@ -1078,7 +1131,16 @@ class Tapper:
                 )
 
                 info_json = await info_response.json()
-                chat_id = info_json['data']['squad']['chatId']
+
+                if info_json.get('statusCode') != 200:
+                    self.warning(f"Warning during joining squad: {info_json.get('Message', f'Something went wrong when joining squad: <magenta>{squad}</magenta>')}")
+                    return None
+
+                chat_id = info_json.get('data', {}).get('squad', {}).get('chatId', None)
+
+                if not chat_id:
+                    self.warning(f"Something went wrong when joining squad: <magenta>{squad}</magenta>")
+                    return None
 
                 join_response = await http_client.post(
                     f'https://api.notcoin.tg/squads/{squad}/join',
@@ -1185,8 +1247,110 @@ class Tapper:
             self.warning(f"WebSocket connection error: {e}")
             return None
 
+    async def handle_templates_list(self, http_client: aiohttp.ClientSession):
+        try:
+            response = await http_client.get('https://notpx.app/api/v1/image/template/list?limit=2000&offset=0')
+
+            templates = await response.json()
+
+            await generate_template_html_page(templates=templates)
+        except Exception as e:
+            logger.warning(f"Unknown error during getting templates list: {e}")
+            return None
+
+    async def handle_server_mode(self, http_client: aiohttp.ClientSession):
+        try:
+            await inform(self.user_id, current_balance, times_to_fall=20, session_name=self.session_name)
+            check = await self.check_join_template(http_client=http_client)
+            if check:
+                await asyncio.sleep(delay=random.randint(4, 10))
+                is_successfully_subscribed = await self.subscribe_to_template(http_client=http_client, template_id=self.template_id_to_join)
+                if is_successfully_subscribed:
+                    self.success(f"<cyan>[{self.mode}]</cyan> Successfully subscribed to the template | ID: <cyan>{self.template_id_to_join}</cyan>")
+                    await asyncio.sleep(delay=random.randint(4, 10))
+                    return True
+                else:
+                    delay = random.randint(60, 120)
+                    self.info(f"Joining to template restart in {delay} seconds. <cyan>[{self.mode}]</cyan>")
+                    await asyncio.sleep(delay=delay)
+                    self.token_live_time = 0
+                    return False
+            await self.draw_server_mode(http_client=http_client, retries=20)
+        except Exception as e:
+            self.error(f"Unknown error during running <cyan>[{self.mode}]</cyan>: {e}")
+            return True
+
+    async def handle_custom_templates_mode(self, http_client: aiohttp.ClientSession):
+        for cycle in [1, 2]:
+            try:
+                self.template_info = {
+                    'x': 244,
+                    'y': 244,
+                    'image_size': 510,
+                    'image': None,
+                    'id': '355876562',
+                }
+
+                if not self.custom_template_id and settings.ENABLE_RANDOM_CUSTOM_TEMPLATE == True and len(settings.RANDOM_TEMPLATE_IDS) > 0:
+                    self.custom_template_id = random.choice(settings.RANDOM_TEMPLATE_IDS)
+                elif not self.custom_template_id and settings.CUSTOM_TEMPLATE_ID:
+                    self.custom_template_id = settings.CUSTOM_TEMPLATE_ID
+
+                if (settings.ENABLE_DRAW_CUSTOM_TEMPLATE == True or settings.ENABLE_RANDOM_CUSTOM_TEMPLATE == True) and self.custom_template_id:
+                    curr_user_template = await self.get_user_current_template(http_client=http_client)
+                    await asyncio.sleep(delay=random.randint(3, 6))
+                    is_successfully_subscribed = True
+                    if not curr_user_template or curr_user_template.get('id', 0) != self.custom_template_id:
+                        is_successfully_subscribed = await self.subscribe_to_template(http_client=http_client, template_id=self.custom_template_id)
+                        if is_successfully_subscribed:
+                            self.success(f"Successfully subscribed to the template | ID: <cyan>{self.custom_template_id}</cyan>")
+                        await asyncio.sleep(delay=random.randint(4, 10))
+
+                    if is_successfully_subscribed:
+                        template_info_data = await self.get_template_info(http_client=http_client, template_id=self.custom_template_id)
+                        if template_info_data:
+                            await asyncio.sleep(delay=random.randint(4, 10))
+                            image_url = template_info_data['url']
+                            image_headers = dict()
+                            image_headers['Host'] = 'static.notpx.app'
+                            template_image = await self.get_image(http_client, image_url, image_headers=image_headers, is_template=True)
+
+                            if template_image:
+                                self.template_info = {
+                                    'x': template_info_data['x'],
+                                    'y': template_info_data['y'],
+                                    'image_size': template_info_data['imageSize'],
+                                    'image': template_image,
+                                    'id': template_info_data['id'],
+                                }
+
+                if self.template_info['image'] == None and cycle < 2:
+                    self.info(f"Use default template <cyan>{self.template_info['id']}</cyan> instead <magenta>{self.custom_template_id}</magenta>")
+                    self.custom_template_id = '355876562'
+                    await asyncio.sleep(delay=random.randint(2, 4))
+                    continue
+
+                if self.template_info['image']:
+                    await self.draw_template(http_client=http_client, template_info=self.template_info)
+#                     if settings.ENABLE_SOCKETS == True:
+#                         self.socket = await self.create_socket_connection(http_client=http_client)
+#                         await asyncio.sleep(delay=random.randint(200, 1000))
+#                         return None
+#
+#                     if self.socket:
+#                         await self.draw_template_socket(http_client=http_client, template_info=self.template_info)
+#                     else:
+#                         await self.draw_template(http_client=http_client, template_info=self.template_info)
+                else:
+                    self.warning(f"Something went wrong when try to load template image. Skipping the drawing cycle.")
+                await asyncio.sleep(delay=random.randint(5, 10))
+            except Exception as e:
+                self.error(f"Unknown error during running <cyan>[{self.mode}]</cyan>: {e}")
+                await asyncio.sleep(delay=random.randint(5, 10))
+                return None
+
     async def run(self, proxy: str | None) -> None:
-        if settings.USE_RANDOM_DELAY_IN_RUN:
+        if settings.USE_RANDOM_DELAY_IN_RUN and settings.SHOW_TEMPLATES_LIST == False:
             random_delay = random.randint(settings.RANDOM_DELAY_IN_RUN[0], settings.RANDOM_DELAY_IN_RUN[1])
             self.info(f"Bot will start in <ly>{random_delay}s</ly>")
             await asyncio.sleep(random_delay)
@@ -1199,16 +1363,27 @@ class Tapper:
 
         http_client = CloudflareScraper(headers=headers, connector=proxy_conn)
 
+        if re.search("http://", proxy):
+            self.image_scraper_proxies = {"http": proxy}
+        elif re.search("https://", proxy):
+            self.image_scraper_proxies = {"http": proxy.replace('https://', 'http://'), "https": proxy}
+        elif re.search("socks5://", proxy):
+            self.image_scraper_proxies = {"http": proxy.replace('socks5://', 'http://'), "socks5": proxy}
+
+        self.image_scraper = cloudscraper.create_scraper()
+
         if proxy:
             await self.check_proxy(http_client=http_client, proxy=proxy)
 
-        access_token_created_time = 0
-        token_live_time = random.randint(500, 900)
+        self.access_token_created_time = 0
+        self.token_live_time = random.randint(500, 900)
         tries_to_login = 4
+
+        await self.clean_images_cache()
 
         while True:
             try:
-                if time() - access_token_created_time >= token_live_time:
+                if time() - self.access_token_created_time >= self.token_live_time:
                     login_need = True
 
                 if login_need:
@@ -1220,11 +1395,12 @@ class Tapper:
 
                     http_client.headers['Authorization'] = f"initData {self.tg_web_data}"
 
-                    access_token_created_time = time()
-                    token_live_time = random.randint(500, 900)
+                    self.access_token_created_time = time()
+                    self.token_live_time = random.randint(500, 900)
 
                     if self.first_run is not True and self.tg_web_data:
-                        self.success("Logged in successfully")
+                        if settings.SHOW_TEMPLATES_LIST == False:
+                            self.success("Logged in successfully")
                         self.first_run = True
 
                     login_need = False
@@ -1233,16 +1409,19 @@ class Tapper:
 
             except Exception as error:
                 if self.check_timeout_error(error) or self.check_error(error, "Service Unavailable"):
-                    self.warning(f"Warning during login: <magenta>Notpixel</magenta> server is not response.")
+                    if settings.SHOW_TEMPLATES_LIST == False:
+                        self.warning(f"Warning during login: <magenta>Notpixel</magenta> server is not response.")
                     if tries_to_login > 0:
                         tries_to_login = tries_to_login - 1
-                        self.info(f"Login request not always successful, retrying..")
+                        if settings.SHOW_TEMPLATES_LIST == False:
+                            self.info(f"Login request not always successful, retrying..")
                         await asyncio.sleep(delay=random.randint(10, 40))
                     else:
                         await asyncio.sleep(delay=5)
                         break
                 else:
-                    self.error(f"Unknown error during login: <light-yellow>{error}</light-yellow>")
+                    if settings.SHOW_TEMPLATES_LIST == False:
+                        self.error(f"Unknown error during login: <light-yellow>{error}</light-yellow>")
                     await asyncio.sleep(delay=5)
                     break
 
@@ -1252,6 +1431,11 @@ class Tapper:
                 await asyncio.sleep(delay=random.randint(2, 5))
 
                 if user is not None:
+                    if settings.SHOW_TEMPLATES_LIST == True:
+                        await self.handle_templates_list(http_client=http_client)
+                        await http_client.close()
+                        return None
+
                     self.mode = 'CUSTOM TEMPLATE MODE'
 
                     if settings.ENABLE_SERVER_MODE:
@@ -1275,81 +1459,11 @@ class Tapper:
 
                     if settings.ENABLE_AUTO_DRAW == True:
                         if settings.ENABLE_SERVER_MODE == True:
-                            await inform(self.user_id, current_balance, times_to_fall=20, session_name=self.session_name)
-                            check = await self.check_join_template(http_client=http_client)
-                            if check:
-                                await asyncio.sleep(delay=random.randint(4, 10))
-                                is_successfully_subscribed = await self.subscribe_to_template(http_client=http_client, template_id=self.template_id_to_join)
-                                if is_successfully_subscribed:
-                                    self.success(f"<cyan>[{self.mode}]</cyan> Successfully subscribed to the template | ID: <cyan>{self.template_id_to_join}</cyan>")
-                                    await asyncio.sleep(delay=random.randint(4, 10))
-                                else:
-                                    delay = random.randint(60, 120)
-                                    self.info(f"Joining to template restart in {delay} seconds. <cyan>[{self.mode}]</cyan>")
-                                    await asyncio.sleep(delay=delay)
-                                    token_live_time = 0
-                                    continue
-                            await self.draw_server_mode(http_client=http_client, retries=20)
+                            success = await self.handle_server_mode(http_client=http_client)
+                            if success == False:
+                                continue
                         else:
-                            self.template_info = {
-                                'x': 244,
-                                'y': 244,
-                                'image_size': 510,
-                                'image': None,
-                                'id': "Durov",
-                            }
-
-                            if not self.custom_template_id and settings.ENABLE_RANDOM_CUSTOM_TEMPLATE == True and len(settings.RANDOM_TEMPLATE_IDS) > 0:
-                                self.custom_template_id = random.choice(settings.RANDOM_TEMPLATE_IDS)
-                            elif settings.CUSTOM_TEMPLATE_ID:
-                                self.custom_template_id = settings.CUSTOM_TEMPLATE_ID
-
-                            if (settings.ENABLE_DRAW_CUSTOM_TEMPLATE == True or settings.ENABLE_RANDOM_CUSTOM_TEMPLATE == True) and self.custom_template_id:
-                                curr_user_template = await self.get_user_current_template(http_client=http_client)
-                                await asyncio.sleep(delay=random.randint(3, 6))
-                                is_successfully_subscribed = True
-                                if not curr_user_template or curr_user_template.get('id', 0) != self.custom_template_id:
-                                    is_successfully_subscribed = await self.subscribe_to_template(http_client=http_client, template_id=self.custom_template_id)
-                                    if is_successfully_subscribed:
-                                        self.success(f"Successfully subscribed to the template | ID: <cyan>{self.custom_template_id}</cyan>")
-                                    await asyncio.sleep(delay=random.randint(4, 10))
-
-                                if is_successfully_subscribed:
-                                    template_info_data = await self.get_template_info(http_client=http_client, template_id=self.custom_template_id)
-                                    if template_info_data:
-                                        await asyncio.sleep(delay=random.randint(4, 10))
-                                        image_url = template_info_data['url']
-                                        image_headers = deepcopy(headers_image)
-                                        image_headers['User-Agent'] = headers['User-Agent']
-                                        image_headers['Host'] = 'static.notpx.app'
-                                        template_image = await self.get_image(http_client, image_url, image_headers=image_headers, is_template=True)
-
-                                        self.template_info = {
-                                            'x': template_info_data['x'],
-                                            'y': template_info_data['y'],
-                                            'image_size': template_info_data['imageSize'],
-                                            'image': template_image,
-                                            'id': template_info_data['id'],
-                                        }
-
-                            if not self.template_info['image']:
-                                image_url = 'https://app.notpx.app/assets/durovoriginal-CqJYkgok.png'
-                                image_headers = deepcopy(headers)
-                                image_headers['Host'] = 'app.notpx.app'
-                                self.template_info['image'] = await self.get_image(http_client, image_url, image_headers=image_headers)
-                                await asyncio.sleep(delay=random.randint(4, 8))
-
-                            if self.template_info['image']:
-                                if settings.ENABLE_SOCKETS == True:
-                                    self.socket = await self.create_socket_connection(http_client=http_client)
-                                    await asyncio.sleep(delay=random.randint(200, 1000))
-                                    return None
-
-                                if self.socket:
-                                    await self.draw_template_socket(http_client=http_client, template_info=self.template_info)
-                                else:
-                                    await self.draw_template(http_client=http_client, template_info=self.template_info)
-                            await asyncio.sleep(delay=random.randint(2, 5))
+                            await self.handle_custom_templates_mode(http_client=http_client)
 
                     if settings.ENABLE_AUTO_UPGRADE == True:
                         await self.upgrade(http_client=http_client)

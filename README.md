@@ -116,6 +116,7 @@ You can also use arguments for quick start, for example:
 
 # 1 - Start drawing 🎨️
 # 2 - Creates a session 👨‍🎨
+# 3 - Get actual templates list 🖼
 ```
 
 # Windows manual installation

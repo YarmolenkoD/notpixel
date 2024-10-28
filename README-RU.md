@@ -113,8 +113,9 @@ python3 main.py
 # Or
 ~/notpixel >>> python3 main.py -a (1/2)
 
-# 1 - Запускает кликер
-# 2 - Создает сессию
+# 1 - Start drawing 🎨️
+# 2 - Creates a session 👨‍🎨
+# 3 - Get actual templates list 🖼
 ```
 
 
