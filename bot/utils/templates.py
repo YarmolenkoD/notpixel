@@ -44,16 +44,18 @@ async def generate_template_html_page(templates: dict):
     </html>
     '''
 
-    with open("templates.html", "w") as file:
-        file.write(html_content)
-        logger.success(f"Templates page successfully generated to templates.html file")
+    if settings.OPEN_TEMPLATES_LIST_IN_BROWSER:
+        with open("templates.html", "w") as file:
+            file.write(html_content)
+            logger.success(f"Templates page successfully generated to templates.html file")
 
     with open("templates.json", "w") as file:
         file.write(json.dumps(templates, indent=4))
         logger.success(f"Templates successfully saved to templates.json file")
 
-    try:
-        file_path = os.path.abspath("templates.html")
-        webbrowser.open(f"file://{file_path}")
-    except Exception as error:
-        logger.warning(f"Can't open templates list page in browser, but you can find templates ids in templates.json file.")
+    if settings.OPEN_TEMPLATES_LIST_IN_BROWSER:
+        try:
+            file_path = os.path.abspath("templates.html")
+            webbrowser.open(f"file://{file_path}")
+        except Exception as error:
+            logger.warning(f"Can't open templates list page in browser, but you can find templates ids in templates.json file.")

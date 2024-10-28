@@ -493,7 +493,7 @@ class Tapper:
                 for file_path in png_files:
                     os.remove(file_path)
 
-                self.success(f"Images cache directory successfully cleaned.")
+                logger.success(f"Images cache directory successfully cleaned.")
         except Exception as error:
             return None
 
@@ -1133,13 +1133,13 @@ class Tapper:
                 info_json = await info_response.json()
 
                 if info_json.get('statusCode') != 200:
-                    self.warning(f"Warning during joining squad: {info_json.get('Message', f'Something went wrong when joining squad: <magenta>{squad}</magenta>')}")
+                    self.warning(f"Can't get squad info during joining squad: {info_json.get('Message', f'Something went wrong when joining squad: <magenta>{squad}</magenta>')}")
                     return None
 
                 chat_id = info_json.get('data', {}).get('squad', {}).get('chatId', None)
 
-                if not chat_id:
-                    self.warning(f"Something went wrong when joining squad: <magenta>{squad}</magenta>")
+                if chat_id == None:
+                    self.warning(f"Can't get chat id during joining squad: <magenta>{squad}</magenta>")
                     return None
 
                 join_response = await http_client.post(
@@ -1151,7 +1151,7 @@ class Tapper:
                 if join_response.status in [200, 201]:
                     self.success(f"Successfully joined squad: <magenta>{squad}</magenta>")
                 else:
-                    self.warning(f"Something went wrong when joining squad: <magenta>{squad}</magenta>")
+                    self.warning(f"Something went wrong: Can't join to squad <magenta>{squad}</magenta>")
         except Exception as error:
             if self.check_timeout_error(error) or self.check_error(error, "Service Unavailable"):
                 self.warning(f"Warning during joining squad: <magenta>Notpixel</magenta> server is not response.")

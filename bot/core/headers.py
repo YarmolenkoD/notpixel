@@ -46,6 +46,7 @@ headers_socket = {
 headers_notcoin = {
     'Accept': '*/*',
     'Accept-Language': 'en-US,en;q=0.5',
+    'Accept-Encoding': 'gzip, deflate, br, zstd',
     'Connection': 'keep-alive',
     'Content-Lenght': '0',
     'Host': 'api.notcoin.tg',
@@ -53,6 +54,7 @@ headers_notcoin = {
     'Referer': 'https://webapp.notcoin.tg/',
     'bypass-tunnel-reminder': 'x',
     'TE': 'trailers',
+    'Priority': 'u=1, i',
     'Sec-Fetch-Dest': 'empty',
     'Sec-Fetch-Mode': 'cors',
     'Sec-Fetch-Site': 'same-site',
@@ -61,5 +63,5 @@ headers_notcoin = {
     'Sec-Ch-Ua-platform': '"Android"',
     'User-Agent': 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.6422.165 Mobile Safari/537.36',
     'X-Auth-Token': 'Bearer null',
-    'bypass-tunnel-reminder': 'x'
+    'Bypass-Tunnel-Reminder': 'x'
 }

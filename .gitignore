@@ -178,6 +178,8 @@ package.json
 
 image-server
 
+bot/assets/templates/*.png
+
 templates.html
 templates.json
 
