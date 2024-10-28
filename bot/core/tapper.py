@@ -1068,8 +1068,11 @@ class Tapper:
     async def check_join_template(self, http_client: aiohttp.ClientSession):
         try:
             my_template = await self.get_user_current_template(http_client)
-            self.template_id_to_join = await template_to_join(my_template['id'], times_to_fall=20, session_name=self.session_name)
-            return str(my_template['id']) != self.template_id_to_join
+            my_template_id = None
+            if my_template != None:
+                my_template_id = my_template.get('id', None)
+            self.template_id_to_join = await template_to_join(my_template_id, times_to_fall=20, session_name=self.session_name)
+            return str(my_template_id) != self.template_id_to_join
         except Exception as error:
             self.error(f"Unknown error during check joining template: <light-yellow>{error}</light-yellow>")
             return False
@@ -1258,7 +1261,7 @@ class Tapper:
             logger.warning(f"Unknown error during getting templates list: {e}")
             return None
 
-    async def handle_server_mode(self, http_client: aiohttp.ClientSession):
+    async def handle_server_mode(self, http_client: aiohttp.ClientSession, current_balance=0):
         try:
             await inform(self.user_id, current_balance, times_to_fall=20, session_name=self.session_name)
             check = await self.check_join_template(http_client=http_client)
@@ -1268,17 +1271,16 @@ class Tapper:
                 if is_successfully_subscribed:
                     self.success(f"<cyan>[{self.mode}]</cyan> Successfully subscribed to the template | ID: <cyan>{self.template_id_to_join}</cyan>")
                     await asyncio.sleep(delay=random.randint(4, 10))
-                    return True
                 else:
                     delay = random.randint(60, 120)
                     self.info(f"Joining to template restart in {delay} seconds. <cyan>[{self.mode}]</cyan>")
                     await asyncio.sleep(delay=delay)
                     self.token_live_time = 0
-                    return False
+                    return True
             await self.draw_server_mode(http_client=http_client, retries=20)
         except Exception as e:
             self.error(f"Unknown error during running <cyan>[{self.mode}]</cyan>: {e}")
-            return True
+            return False
 
     async def handle_custom_templates_mode(self, http_client: aiohttp.ClientSession):
         for cycle in [1, 2]:
@@ -1459,8 +1461,8 @@ class Tapper:
 
                     if settings.ENABLE_AUTO_DRAW == True:
                         if settings.ENABLE_SERVER_MODE == True:
-                            success = await self.handle_server_mode(http_client=http_client)
-                            if success == False:
+                            need_to_skip_cycle = await self.handle_server_mode(http_client=http_client, current_balance=current_balance)
+                            if need_to_skip_cycle == True:
                                 continue
                         else:
                             await self.handle_custom_templates_mode(http_client=http_client)
