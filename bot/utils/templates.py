@@ -1,6 +1,7 @@
 import webbrowser
 import os
 import json
+from bot.config import settings
 
 from bot.utils import logger
 
