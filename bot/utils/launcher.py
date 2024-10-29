@@ -28,6 +28,10 @@ My other bots:
 💩Boinkers - https://github.com/YarmolenkoD/boinkers
 🚀Moonbix - https://github.com/YarmolenkoD/moonbix [GAME IS NOT WORKING]
 
+Have you seen the new perspective PAWS project yet ? 🐾
+
+Use my ref to support me: https://t.me/PAWSOG_bot/PAWS?startapp=xDZm2M3t
+
 Select an action:
 
     1. Start drawing 🎨️
