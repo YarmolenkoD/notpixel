@@ -1365,12 +1365,13 @@ class Tapper:
 
         http_client = CloudflareScraper(headers=headers, connector=proxy_conn)
 
-        if re.search("http://", proxy):
-            self.image_scraper_proxies = {"http": proxy}
-        elif re.search("https://", proxy):
-            self.image_scraper_proxies = {"http": proxy.replace('https://', 'http://'), "https": proxy}
-        elif re.search("socks5://", proxy):
-            self.image_scraper_proxies = {"http": proxy.replace('socks5://', 'http://'), "socks5": proxy}
+        if proxy != None:
+            if re.search("http://", proxy):
+                self.image_scraper_proxies = {"http": proxy}
+            elif re.search("https://", proxy):
+                self.image_scraper_proxies = {"http": proxy.replace('https://', 'http://'), "https": proxy}
+            elif re.search("socks5://", proxy):
+                self.image_scraper_proxies = {"http": proxy.replace('socks5://', 'http://'), "socks5": proxy}
 
         self.image_scraper = cloudscraper.create_scraper()
 
