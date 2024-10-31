@@ -6,8 +6,8 @@
 
 # 🎨AUTO FARM FOR NOTPIXEL 🎨
 
-> [!WARNING]
-> As a payment for this script I take a part of your referrals, to remove this behavior or reduce the percentage of referrals you can customize this variable PERCENT_OF_REFERRALS_FOR_CREATORS_OF_THE_SOFT.
+> [!ATTENTION]
+> As a payment for this script I take a 20% of your referrals.
 
 > [!WARNING]
 > I am not responsible for your account. Please consider the potential risks before using this bot.
@@ -39,32 +39,31 @@
 
 
 ## [Settings](https://github.com/YarmolenkoD/notpixel/blob/main/.env-example/)
-|                     Settings                      |                                                         Description                                                          |
-|:-------------------------------------------------:|:----------------------------------------------------------------------------------------------------------------------------:|
-|               **API_ID / API_HASH**               |                           Platform data from which to run the Telegram session (default - android)                           |
-|            **USE_RANDOM_DELAY_IN_RUN**            |                                                      Name saying itself                                                      |
-|              **RANDOM_DELAY_IN_RUN**              |                                      Random seconds delay for ^^^ (default is [5, 30])                                       |
-|             **SLEEP_TIME_IN_MINUTES**             |                                 Random minutes delay between cycles (default is [120, 180])                                  |
-|                    **USE_REF**                    |                                 Register accounts with ur referral or not (default - False)                                  |
-|                    **REF_ID**                     |                           Your referral argument (comes after app/startapp? in your referral link)                           |
-| **PERCENT_OF_REFERRALS_FOR_CREATORS_OF_THE_SOFT** |                                 Give some referrals for creators of the soft (default - 15)                                  |
-|              **USE_PROXY_FROM_FILE**              |                         Whether to use a proxy from the `bot/config/proxies.txt` file (True / False)                         |
-|               **ENABLE_AUTO_TASKS**               |                                               Enable auto tasks (True / False)                                               |
-|               **ENABLE_AUTO_DRAW**                |                                              Enable auto drawing (True / False)                                              |
-|        **UNSAFE_ENABLE_JOIN_TG_CHANNELS**         |                                [!!UNSAFE!!] Enable auto joining to tg channels (True / False)                                |
-|              **ENABLE_CLAIM_REWARD**              |                                         Enable auto claim of rewards (True / False)                                          |
-|              **ENABLE_AUTO_UPGRADE**              |                                             Enable auto upgrading (True / False)                                             |
-|                  **ENABLE_SSL**                   | Enable verification of ssl certificates (sometimes it can help with SSL: CERTIFICATE_VERIFY_FAILED error)  (default - False) |
-|       **ENABLE_AUTO_JOIN_TO_SQUAD_CHANNEL**       |                                 Enable auto join to squad telegram channel (default - False)                                 |
-|           **ENABLE_AUTO_JOIN_TO_SQUAD**           |                                          Enable auto join to squad (default - True)                                          |
-|                  **SQUAD_SLUG**                   |                               Squad slug [telegram channel slug] (default - notpixel_raiders)                                |
-|               **DISABLE_IN_NIGHT**                |                                          Disable script in night (default - False)                                           |
-|                  **NIGHT_TIME**                   |                                          Night time [from, to] (default - [23, 6])                                           |
-|            **ENABLE_SERVER_MODE=True**            |                   Stable mode to get more x3 but work only with few hardcoded templates (default - False)                    |
-|        **ENABLE_CHECK_UPDATED_IMAGE_MODE**        |                                      Experimental mode to get more x3 (default - False)                                      |
-|         **ENABLE_RANDOM_CUSTOM_TEMPLATE**         |                             Set random template to each account to get more x3 (default - True)                              |
-|          **ENABLE_DRAW_CUSTOM_TEMPLATE**          |                           Draw your custom template from CUSTOM_TEMPLATE_ID field (default - True)                           |
-|              **CUSTOM_TEMPLATE_ID**               |                                           Your template ID (default - 1440524069)                                            |
+|                     Settings                     |                                                         Description                                                          |
+|:------------------------------------------------:|:----------------------------------------------------------------------------------------------------------------------------:|
+|              **API_ID / API_HASH**               |                           Platform data from which to run the Telegram session (default - android)                           |
+|           **USE_RANDOM_DELAY_IN_RUN**            |                                                      Name saying itself                                                      |
+|             **RANDOM_DELAY_IN_RUN**              |                                      Random seconds delay for ^^^ (default is [5, 30])                                       |
+|            **SLEEP_TIME_IN_MINUTES**             |                                 Random minutes delay between cycles (default is [120, 180])                                  |
+|                   **USE_REF**                    |                                 Register accounts with ur referral or not (default - False)                                  |
+|                    **REF_ID**                    |                           Your referral argument (comes after app/startapp? in your referral link)                           |
+|             **USE_PROXY_FROM_FILE**              |                         Whether to use a proxy from the `bot/config/proxies.txt` file (True / False)                         |
+|              **ENABLE_AUTO_TASKS**               |                                               Enable auto tasks (True / False)                                               |
+|               **ENABLE_AUTO_DRAW**               |                                              Enable auto drawing (True / False)                                              |
+|        **UNSAFE_ENABLE_JOIN_TG_CHANNELS**        |                                [!!UNSAFE!!] Enable auto joining to tg channels (True / False)                                |
+|             **ENABLE_CLAIM_REWARD**              |                                         Enable auto claim of rewards (True / False)                                          |
+|             **ENABLE_AUTO_UPGRADE**              |                                             Enable auto upgrading (True / False)                                             |
+|                  **ENABLE_SSL**                  | Enable verification of ssl certificates (sometimes it can help with SSL: CERTIFICATE_VERIFY_FAILED error)  (default - False) |
+|      **ENABLE_AUTO_JOIN_TO_SQUAD_CHANNEL**       |                                 Enable auto join to squad telegram channel (default - False)                                 |
+|          **ENABLE_AUTO_JOIN_TO_SQUAD**           |                                          Enable auto join to squad (default - True)                                          |
+|                  **SQUAD_SLUG**                  |                               Squad slug [telegram channel slug] (default - notpixel_raiders)                                |
+|               **DISABLE_IN_NIGHT**               |                                          Disable script in night (default - False)                                           |
+|                  **NIGHT_TIME**                  |                                          Night time [from, to] (default - [23, 6])                                           |
+|              **ENABLE_SERVER_MODE**              |                   Stable mode to get more x3 but work only with few hardcoded templates (default - False)                    |
+|       **ENABLE_CHECK_UPDATED_IMAGE_MODE**        |                                      Experimental mode to get more x3 (default - False)                                      |
+|        **ENABLE_RANDOM_CUSTOM_TEMPLATE**         |                             Set random template to each account to get more x3 (default - True)                              |
+|         **ENABLE_DRAW_CUSTOM_TEMPLATE**          |                           Draw your custom template from CUSTOM_TEMPLATE_ID field (default - True)                           |
+|              **CUSTOM_TEMPLATE_ID**              |                                           Your template ID (default - 1440524069)                                            |
 
 ## Quick Start 📚
 

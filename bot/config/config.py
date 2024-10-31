@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     UNSAFE_ENABLE_JOIN_TG_CHANNELS: bool = False # NOT RECOMMENDED
     ENABLE_CLAIM_REWARD: bool = True
     ENABLE_AUTO_UPGRADE: bool = True
+    ENABLE_AUTO_PUMPKINS: bool = True
 
     ENABLE_AUTO_JOIN_TO_SQUAD_CHANNEL: bool = False
     ENABLE_AUTO_JOIN_TO_SQUAD: bool = True
@@ -30,13 +31,13 @@ class Settings(BaseSettings):
 
     ENABLE_SOCKETS: bool = False
     ENABLE_CHECK_UPDATED_IMAGE_MODE: bool = False
-    ENABLE_SERVER_MODE: bool = True
+    ENABLE_SERVER_MODE: bool = False
 
     ENABLE_RANDOM_CUSTOM_TEMPLATE: bool = True
     RANDOM_TEMPLATE_IDS: list[int] = [
         6103707977, 1479673219, 1041243367, 2087855212,
         2100761925, 508528154, 474917422, 7151956877,
-        5098860372, 751725586
+        5098860372, 751725586, 355876562
     ]
 
     ENABLE_DRAW_CUSTOM_TEMPLATE: bool = True
@@ -45,11 +46,11 @@ class Settings(BaseSettings):
     ENABLE_SSL: bool = False
 
     PAINT_REWARD_MAX: int = 7
-    ENERGY_LIMIT_MAX: int = 6
-    RE_CHARGE_SPEED_MAX: int = 7
+    ENERGY_LIMIT_MAX: int = 7
+    RE_CHARGE_SPEED_MAX: int = 11
 
     BOOSTS_BLACK_LIST: list[str] = ['invite3frens', 'INVITE_FRIENDS', 'TON_TRANSACTION', 'BOOST_CHANNEL', 'ACTIVITY_CHALLENGE', 'CONNECT_WALLET']
-    TASKS_TODO_LIST: list[str] = ["x:notcoin", "x:notpixel", "paint20pixels", "leagueBonusSilver", "leagueBonusGold", "leagueBonusPlatinum", "channel:notpixel_channel", "channel:notcoin", "boinkTask", "makePixelAvatar", "joinSquad"]
+    TASKS_TODO_LIST: list[str] = ["pumpkin", "x:notcoin", "x:notpixel", "paint20pixels", "leagueBonusSilver", "leagueBonusGold", "leagueBonusPlatinum", "channel:notpixel_channel", "channel:notcoin", "boinkTask", "makePixelAvatar", "joinSquad"]
 
     USE_PROXY_FROM_FILE: bool = True
 
