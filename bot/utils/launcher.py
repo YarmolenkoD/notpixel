@@ -26,11 +26,12 @@ start_text = """
 My other bots:
 
 💩Boinkers - https://github.com/YarmolenkoD/boinkers
-🚀Moonbix - https://github.com/YarmolenkoD/moonbix [GAME IS NOT WORKING]
+🐾Paws - https://github.com/YarmolenkoD/paws
 
-ATTENTION NEW BOT FOR PAWS:
+🚀 HIDDEN CODE MARKET 🚀
 
-🐾 PAWS - https://github.com/YarmolenkoD/paws
+🐾 PAWS WALLET CONNECTOR - https://t.me/hcmarket_bot?start=referral_355876562-project_1016
+🎨 NOTPIXEL PREMIUM - https://t.me/hcmarket_bot?start=referral_355876562-project_1015
 
 Select an action:
 

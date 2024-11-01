@@ -176,7 +176,8 @@ index.js
 package-lock.json
 package.json
 
-image-server
+local-server
+./local-server
 
 bot/assets/templates/*.png
 

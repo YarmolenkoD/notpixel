@@ -3,7 +3,6 @@ from contextlib import suppress
 
 from bot.utils.launcher import process
 
-
 async def main():
     await process()
 
