@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     UNSAFE_ENABLE_JOIN_TG_CHANNELS: bool = False # NOT RECOMMENDED
     ENABLE_CLAIM_REWARD: bool = True
     ENABLE_AUTO_UPGRADE: bool = True
-    ENABLE_AUTO_PUMPKINS: bool = True
+    ENABLE_AUTO_PUMPKINS: bool = False
 
     ENABLE_AUTO_JOIN_TO_SQUAD_CHANNEL: bool = False
     ENABLE_AUTO_JOIN_TO_SQUAD: bool = True
