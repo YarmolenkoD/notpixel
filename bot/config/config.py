@@ -29,7 +29,6 @@ class Settings(BaseSettings):
     DISABLE_IN_NIGHT: bool = False
     NIGHT_TIME: list[int] = [23, 6]
 
-    ENABLE_SOCKETS: bool = False
     ENABLE_CHECK_UPDATED_IMAGE_MODE: bool = False
     ENABLE_SERVER_MODE: bool = False
 
@@ -53,7 +52,7 @@ class Settings(BaseSettings):
     RE_CHARGE_SPEED_MAX: int = 11
 
     BOOSTS_BLACK_LIST: list[str] = ['invite3frens', 'INVITE_FRIENDS', 'TON_TRANSACTION', 'BOOST_CHANNEL', 'ACTIVITY_CHALLENGE', 'CONNECT_WALLET']
-    TASKS_TODO_LIST: list[str] = ["pumpkin", "x:notcoin", "x:notpixel", "paint20pixels", "leagueBonusSilver", "leagueBonusGold", "leagueBonusPlatinum", "channel:notpixel_channel", "channel:notcoin", "boinkTask", "makePixelAvatar", "joinSquad"]
+    TASKS_TODO_LIST: list[str] = ["nikolai", "pumpkin", "x:notcoin", "x:notpixel", "paint20pixels", "leagueBonusSilver", "leagueBonusGold", "leagueBonusPlatinum", "channel:notpixel_channel", "channel:notcoin", "boinkTask", "makePixelAvatar", "joinSquad"]
 
     USE_PROXY_FROM_FILE: bool = True
 
@@ -61,6 +60,7 @@ class Settings(BaseSettings):
     OPEN_TEMPLATES_LIST_IN_BROWSER: bool = True
 
     # ------ LEGACY CONFIGURATIONS ------
+    ENABLE_SOCKETS: bool = False
     ENABLE_DRAW_ART: bool = False
     DRAW_ART_COORDS: list[dict] = [
         {
