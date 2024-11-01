@@ -15,6 +15,7 @@
 ## MY OTHER BOTS
 
 ### 💩 [Boinkers](https://github.com/YarmolenkoD/boinkers)
+### 🐾 [Paws](https://github.com/YarmolenkoD/paws)
 ### 🚀 [Moonbix](https://github.com/YarmolenkoD/moonbix) [NOT WORKING]
 
 ## Recommendation before use

@@ -19,6 +19,7 @@
 ## МОИ ДРУГИЕ БОТЫ
 
 ### 💩 [Boinkers](https://github.com/YarmolenkoD/boinkers)
+### 🐾 [Paws](https://github.com/YarmolenkoD/paws)
 ### 🚀 [Moonbix](https://github.com/YarmolenkoD/moonbix)
 
 ## Рекомендация перед использованием
