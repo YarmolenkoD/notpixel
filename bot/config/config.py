@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     ENABLE_AUTO_PUMPKINS: bool = False
 
     ENABLE_AUTO_JOIN_TO_SQUAD_CHANNEL: bool = False
-    ENABLE_AUTO_JOIN_TO_SQUAD: bool = True
+    ENABLE_AUTO_JOIN_TO_SQUAD: bool = False
     SQUAD_SLUG: str = "notpixel_raiders"
 
     DISABLE_IN_NIGHT: bool = False
