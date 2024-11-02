@@ -621,10 +621,10 @@ class Tapper:
     async def get_updated_image(self, http_client: aiohttp.ClientSession):
         try:
             current_image_url = 'https://image.notpx.app/api/v2/image'
-            image_headers = deepcopy(headers)
-            image_headers['Host'] = 'image.notpx.app'
+#             image_headers = deepcopy(headers)
+#             image_headers['Host'] = 'image.notpx.app'
 
-            current_image = await self.get_image(http_client, current_image_url, image_headers=image_headers, load_from_file=False, is_template=False)  # Аргумент image_headers не потрібен
+            current_image = await self.get_image(http_client, current_image_url, image_headers={}, load_from_file=False, is_template=False)  # Аргумент image_headers не потрібен
             return current_image
         except Exception as error:
             self.error(f"Unknown error during getting updated image: <light-yellow>{error}</light-yellow>")
@@ -667,7 +667,7 @@ class Tapper:
             updated_image = None
 
             updated_image_get_time = 0
-            updated_image_live_time = random.randint(5, 10)
+            updated_image_live_time = random.randint(3, 5)
 
             if settings.ENABLE_CHECK_UPDATED_IMAGE_MODE:
                 updated_image = await self.get_updated_image(http_client=http_client)
@@ -695,8 +695,6 @@ class Tapper:
 
                             updated_image_pixel = None
                             updated_image_hex_color = None
-
-                            self.info(f"{curr_x}, {curr_y}")
 
                             if updated_image:
                                 updated_image_pixel = updated_image.getpixel((curr_x, curr_y))
@@ -1178,6 +1176,17 @@ class Tapper:
                 await asyncio.sleep(delay=random.randint(5, 10))
                 return None
 
+    async def setup_image_scrapper(self, proxy: str | None):
+        if proxy != None:
+            if re.search("http://", proxy):
+                self.image_scraper_proxies = {"http": proxy}
+            elif re.search("https://", proxy):
+                self.image_scraper_proxies = {"http": proxy.replace('https://', 'http://'), "https": proxy}
+            elif re.search("socks5://", proxy):
+                self.image_scraper_proxies = {"http": proxy.replace('socks5://', 'http://'), "socks5": proxy}
+
+        self.image_scraper = cloudscraper.create_scraper()
+
     async def run(self, proxy: str | None) -> None:
         if settings.USE_RANDOM_DELAY_IN_RUN and settings.SHOW_TEMPLATES_LIST == False:
             random_delay = random.randint(settings.RANDOM_DELAY_IN_RUN[0], settings.RANDOM_DELAY_IN_RUN[1])
@@ -1192,15 +1201,7 @@ class Tapper:
 
         http_client = CloudflareScraper(headers=headers, connector=proxy_conn)
 
-        if proxy != None:
-            if re.search("http://", proxy):
-                self.image_scraper_proxies = {"http": proxy}
-            elif re.search("https://", proxy):
-                self.image_scraper_proxies = {"http": proxy.replace('https://', 'http://'), "https": proxy}
-            elif re.search("socks5://", proxy):
-                self.image_scraper_proxies = {"http": proxy.replace('socks5://', 'http://'), "socks5": proxy}
-
-        self.image_scraper = cloudscraper.create_scraper()
+        await self.setup_image_scrapper(proxy=proxy)
 
         if proxy:
             await self.check_proxy(http_client=http_client, proxy=proxy)
