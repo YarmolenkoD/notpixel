@@ -404,7 +404,7 @@ class Tapper:
             await asyncio.sleep(delay=random.randint(3, 6))
             return None
 
-    async def get_image(self, http_client, url, image_headers, load_from_file=True, is_template=True):
+    async def get_image(self, http_client, url, image_headers, load_from_file=True, is_template=True, with_proxies=True):
         # Extract the image filename from the URL
         image_filename = os.path.join(self.image_directory, url.split("/")[-1])
 
@@ -424,7 +424,10 @@ class Tapper:
             tries_count = tries_count + 1
             try:
                 if self.image_scraper:
-                    response = self.image_scraper.get(url, headers=image_headers, proxies=self.image_scraper_proxies)
+                    if with_proxies:
+                        response = self.image_scraper.get(url, headers=image_headers, proxies=self.image_scraper_proxies)
+                    else:
+                        response = self.image_scraper.get(url, headers=image_headers)
 
                     if response.status_code == 200:
                         img_data = response.content
@@ -624,7 +627,7 @@ class Tapper:
 #             image_headers = deepcopy(headers)
 #             image_headers['Host'] = 'image.notpx.app'
 
-            current_image = await self.get_image(http_client, current_image_url, image_headers={}, load_from_file=False, is_template=False)  # Аргумент image_headers не потрібен
+            current_image = await self.get_image(http_client, current_image_url, image_headers={}, load_from_file=False, is_template=False, with_proxies=False)
             return current_image
         except Exception as error:
             self.error(f"Unknown error during getting updated image: <light-yellow>{error}</light-yellow>")
@@ -1149,7 +1152,7 @@ class Tapper:
                             image_url = template_info_data['url']
                             image_headers = dict()
                             image_headers['Host'] = 'static.notpx.app'
-                            template_image = await self.get_image(http_client, image_url, image_headers=image_headers, is_template=True)
+                            template_image = await self.get_image(http_client, image_url, image_headers={}, is_template=True, with_proxies=True)
 
                             if template_image:
                                 self.template_info = {
