@@ -672,7 +672,7 @@ class Tapper:
             updated_image_get_time = 0
             updated_image_live_time = random.randint(3, 5)
 
-            if settings.ENABLE_CHECK_UPDATED_IMAGE_MODE:
+            if settings.ENABLE_CHECK_UPDATED_IMAGE_MODE and False:
                 updated_image = await self.get_updated_image(http_client=http_client)
                 updated_image_get_time = time()
 
@@ -683,7 +683,7 @@ class Tapper:
                         if charges == 0:
                             break
 
-                        if settings.ENABLE_CHECK_UPDATED_IMAGE_MODE and (time() - updated_image_get_time >= updated_image_live_time):
+                        if False and settings.ENABLE_CHECK_UPDATED_IMAGE_MODE and (time() - updated_image_get_time >= updated_image_live_time):
                             updated_image = await self.get_updated_image(http_client=http_client)
                             updated_image_get_time = time()
 
@@ -692,7 +692,7 @@ class Tapper:
                             if charges == 0:
                                 break
 
-                            if settings.ENABLE_CHECK_UPDATED_IMAGE_MODE and (time() - updated_image_get_time >= updated_image_live_time):
+                            if False and settings.ENABLE_CHECK_UPDATED_IMAGE_MODE and (time() - updated_image_get_time >= updated_image_live_time):
                                 updated_image = await self.get_updated_image(http_client=http_client)
                                 updated_image_get_time = time()
 
