@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from dateutil import parser
 from time import time
-from urllib.parse import unquote, quote
+from urllib.parse import unquote, quote, urlencode, urlparse
 import re
 import os
 import math
@@ -11,6 +11,7 @@ import io
 import ssl
 import glob
 import cloudscraper
+from yarl import URL
 
 from json import dump as dp, loads as ld
 from aiocfscrape import CloudflareScraper
@@ -36,7 +37,7 @@ import json
 # from .sockets import ClientEventLoggerHandler, SubscriptionEventLoggerHandler
 
 from .agents import generate_random_user_agent
-from .headers import headers, headers_notcoin, headers_socket, headers_image
+from .headers import headers, headers_notcoin, headers_socket, headers_image, headers_advertisement, headers_subscribe
 from .helper import format_duration
 from .image_checker import get_cords_and_color, template_to_join, inform, boost_record
 
@@ -45,6 +46,7 @@ from bot.utils import logger
 from bot.utils.templates import generate_template_html_page
 from bot.utils.logger import SelfTGClient
 from bot.exceptions import InvalidSession
+from bot.utils.websocket_manager import WebsocketManager
 
 self_tg_client = SelfTGClient()
 
@@ -79,6 +81,9 @@ class Tapper:
         self.access_token_created_time = time()
         self.token_live_time = random.randint(500, 900)
         self.enable_pumpkins = settings.ENABLE_AUTO_PUMPKINS or False
+        self.chat_instance = None
+        self.user_info = None
+        self.status = None
 
         headers['User-Agent'] = self.check_user_agent()
         headers_notcoin['User-Agent'] = headers['User-Agent']
@@ -201,6 +206,8 @@ class Tapper:
 
             tg_web_data = unquote(
                 string=auth_url.split('tgWebAppData=', maxsplit=1)[1].split('&tgWebAppVersion', maxsplit=1)[0])
+
+            self.chat_instance = re.findall(r'chat_instance=([^&]+)', tg_web_data)[0]
 
             try:
                 if self.user_id == 0:
@@ -1190,6 +1197,253 @@ class Tapper:
 
         self.image_scraper = cloudscraper.create_scraper()
 
+    async def update_status(self, http_client: aiohttp.ClientSession):
+        base_delay = 2
+        max_retries = 5
+
+        for attempt in range(max_retries):
+            # Main loop for updating status
+            _headers = deepcopy(headers)
+            _headers['User-Agent'] = headers['User-Agent']
+            try:
+                url = 'https://notpx.app/api/v1/mining/status'
+                parsed_url = urlparse(url)
+                domain = URL(f"{parsed_url.scheme}://{parsed_url.netloc}")
+                cookie_jar = http_client.cookie_jar
+                cookies = cookie_jar.filter_cookies(domain)
+                if '__cf_bm' in cookies:
+                    cf_bm_value = cookies['__cf_bm'].value
+                    _headers.update({"Cookie": f"__cf_bm={cf_bm_value}"})
+                else:
+                    self.warning("__cf_bm cookie not found. Template loading might encounter issues.")
+                status_req = await http_client.get(url = url, headers=_headers)
+                status_req.raise_for_status()
+                status_json = await status_req.json()
+                self.status = status_json
+                return  # Exit on successful status update
+
+            except aiohttp.ClientResponseError as error:
+                retry_delay = base_delay * (attempt + 1)
+                self.warning(
+                    f"Status update attempt {attempt} failed| Sleep <y>{retry_delay}"
+                    f"</y> sec | {error.status}, {error.message}")
+                await asyncio.sleep(retry_delay)  # Wait before retrying
+                continue
+
+            except Exception as error:
+                retry_delay = base_delay * (attempt + 1)
+                self.error(
+                    f"Unexpected error when updating status| Sleep <y>{retry_delay}</y> "
+                    f"sec | {error}")
+                await asyncio.sleep(retry_delay * (attempt + 1))
+                continue
+
+        raise RuntimeError(f"{self.session_name} | Failed to update status after {max_retries} attempts")
+
+    async def watch_ads(self, http_client):
+        _headers = deepcopy(headers_advertisement)
+        _headers['User-Agent'] = headers['User-Agent']
+        try:
+            params = {
+                "blockId": 4853,
+                "tg_id": self.user_info["id"],
+                "tg_platform": "android",
+                "platform": "Linux aarch64",
+                "language": self.tg_client.lang_code,
+                "chat_type": "sender",
+                "chat_instance": int(self.chat_instance),
+                "top_domain": "app.notpx.app",
+                "connectiontype": 1
+            }
+            #Trackings
+            while True:
+                base_url = "https://api.adsgram.ai/adv"
+                full_url = f"{base_url}?{urlencode(params)}"
+                adv_response = await http_client.get(full_url, headers=_headers)
+                adv_response.raise_for_status()
+                adv_data = await adv_response.json()
+                if adv_data:
+                    self.info(f"A new advertisement has been found for viewing! | Title: {adv_data['banner']['bannerAssets'][1]['value']} | Type: {adv_data['bannerType']}")
+                    previous_balance = await self.get_balance(http_client=http_client)
+                    render_url = adv_data['banner']['trackings'][0]['value']
+                    render_response = await http_client.get(render_url, headers=_headers)
+                    render_response.raise_for_status()
+                    await asyncio.sleep(random.randint(1, 5))
+                    show_url = adv_data['banner']['trackings'][1]['value']
+                    show_response = await http_client.get(show_url, headers=_headers)
+                    show_response.raise_for_status()
+                    await asyncio.sleep(random.randint(10, 15))
+                    reward_url = adv_data['banner']['trackings'][4]['value']
+                    reward_response = await http_client.get(reward_url, headers=_headers)
+                    reward_response.raise_for_status()
+                    await asyncio.sleep(random.randint(1, 5))
+                    current_balance = await self.get_balance(http_client=http_client)
+                    delta = round(current_balance - previous_balance, 1)
+                    self.success(f"Ad view completed successfully. | Reward: <e>{delta}</e>")
+                    await asyncio.sleep(random.randint(30, 35))
+                else:
+                    self.info(f"No ads are available for viewing at the moment.")
+                    break
+        except Exception as e:
+            logger.error(e)
+
+    async def get_tournament_templates(self, http_client: aiohttp.ClientSession, offset=16):
+        base_delay = 2
+        max_retries = 5
+        templates = []
+        _headers = deepcopy(headers)
+        _headers['User-Agent'] = headers['User-Agent']
+        for offset in range(0, offset, 16):
+            url = f"https://notpx.app/api/v1/tournament/template/list?limit=16&offset={offset}"
+            for attempt in range(max_retries):
+                try:
+                    response = await http_client.get(url=url, headers=headers)
+                    response.raise_for_status()
+                    page_templates = await response.json()
+                    templates.extend(page_templates["list"])
+                    await asyncio.sleep(random.randint(1, 5))
+                    break
+
+                except aiohttp.ClientResponseError as error:
+                    retry_delay = base_delay * (attempt + 1)
+                    self.warning(
+                        f"Attempt {attempt} failed to fetch tournament "
+                        f"templates (HTTP {error.status}) | Retrying in <y>{retry_delay}</y> seconds."
+                        f" Error: {error.message}"
+                    )
+                    await asyncio.sleep(retry_delay)
+
+                except aiohttp.ClientError as error:
+                    retry_delay = base_delay * (attempt + 1)
+                    self.warning(
+                        f"Attempt {attempt} failed due to client error | "
+                        f"Retrying in <y>{retry_delay}</y> seconds. Error: {error}"
+                    )
+                    await asyncio.sleep(retry_delay)
+
+                except Exception as error:
+                    retry_delay = base_delay * (attempt + 1)
+                    self.warning(
+                        f"Unexpected error on attempt {attempt} | "
+                        f"Retrying in <y>{retry_delay}</y> seconds. Error: {error}"
+                    )
+                    await asyncio.sleep(retry_delay)
+
+        if templates:
+            self.info(f"Successfully fetched {len(templates)} tournament templates")
+        else:
+            self.error(f"Failed to fetch tournament templates after {max_retries} attempts")
+
+        return templates if templates else None
+
+    async def get_my_template(self, http_client: aiohttp.ClientSession):
+        url = f"https://notpx.app/api/v1/tournament/template/subscribe/my"
+        _headers = deepcopy(headers_subscribe)
+        _headers['User-Agent'] = headers['User-Agent']
+
+        try:
+            template_req = await http_client.get(url=url, headers=_headers)
+            template_req.raise_for_status()
+            template = await template_req.json()
+            self.info(f"Already subscribed to the template {template['id']}")
+            if template:
+                return template
+            else:
+                return None
+
+        except aiohttp.ClientResponseError as error:
+            return None
+
+        return None
+
+    async def subscribe_tournament_template(self, http_client: aiohttp.ClientSession, template_id):
+        base_delay = 2
+        max_retries = 5
+        url = f"https://notpx.app/api/v1/tournament/template/subscribe/{template_id}"
+        _headers = deepcopy(headers_subscribe)
+        _headers['User-Agent'] = headers['User-Agent']
+        for attempt in range(max_retries):
+            try:
+                template_req = await http_client.put(url=url, headers=_headers)
+                template_req.raise_for_status()
+                self.info(f"Successfully subscribed to tournament template {template_id}")
+                return True
+
+            except aiohttp.ClientResponseError as error:
+                retry_delay = base_delay * (attempt + 1)
+                self.warning(
+                    f"Subscription attempt {attempt} for template {template_id} failed | "
+                    f"Sleep <y>{retry_delay}</y> sec | {error.status}, {error.message}")
+                await asyncio.sleep(retry_delay)
+
+            except Exception as error:
+                retry_delay = base_delay * (attempt + 1)
+                self.error(
+                    f"Unexpected error when subscribing to tournament template {template_id} | "
+                    f"Sleep <y>{retry_delay}</y> sec | {error}")
+                await asyncio.sleep(retry_delay)
+        self.error(
+            f"Failed to subscribe to tournament template {template_id} after {max_retries}"
+            f" attempts")
+    async def choose_and_subscribe_tournament_template(self, http_client):
+        template = await self.get_my_template(http_client=http_client)
+        if not template:
+            if settings.ENABLE_RANDOM_TOURNAMENT_TEMPLATES:
+                templates = await self.get_tournament_templates(http_client=http_client)
+                if templates:
+                    chosen_template = random.choice(templates)
+                    await self.subscribe_tournament_template(http_client=http_client, template_id=chosen_template["id"])
+            else:
+                await self.subscribe_tournament_template(http_client=http_client, template_id=settings.TOURNAMENT_TEMPLATE_ID)
+
+
+    async def use_secret_words(self, http_client: aiohttp.ClientSession):
+        base_delay = 2
+        max_retries = 5
+        secret_words = settings.SECRET_WORDS
+        quests = self.status["quests"]
+        await self.update_status(http_client)
+        if quests:
+            used_secret_words = [key.split("secretWord:")[1] for key in self.status["quests"]
+                               if key.startswith("secretWord:")]
+        else:
+            used_secret_words = []
+        unused_secret_words = [word for word in secret_words if word not in used_secret_words]
+        _headers = deepcopy(headers)
+        _headers['User-Agent'] = headers['User-Agent']
+        url = f"https://notpx.app/api/v1/mining/quest/check/secretWord"
+        parsed_url = urlparse(url)
+        domain = URL(f"{parsed_url.scheme}://{parsed_url.netloc}")
+        cookie_jar = http_client.cookie_jar
+        cookies = cookie_jar.filter_cookies(domain)
+        if '__cf_bm' in cookies:
+            cf_bm_value = cookies['__cf_bm'].value
+            _headers.update({"Cookie": f"__cf_bm={cf_bm_value}"})
+        for secret_word in unused_secret_words:
+            payload = {"secret_word": secret_word}
+            for attempt in range(max_retries):
+                try:
+                    secret_req = await http_client.post(url=url, headers=_headers, json=payload)
+                    secret_req.raise_for_status()
+                    self.info(f"Successfully used the secret word: '{secret_word}'")
+                    return True
+
+                except aiohttp.ClientResponseError as error:
+                    retry_delay = base_delay * (attempt + 1)
+                    self.warning(
+                        f"Secret word usage attempt {attempt} for '{secret_word}' failed | "
+                        f"Sleep <y>{retry_delay}</y> sec | {error.status}, {error.message}")
+                    await asyncio.sleep(retry_delay)
+
+                except Exception as error:
+                    retry_delay = base_delay * (attempt + 1)
+                    self.error(
+                        f"Unexpected error when using the secret word '{secret_word}' | "
+                        f"Sleep <y>{retry_delay}</y> sec | {error}")
+                    await asyncio.sleep(retry_delay)
+            self.error(
+                f"Unable to use the secret word '{secret_word}' after {max_retries} attempts")
+
     async def run(self, proxy: str | None) -> None:
         if settings.USE_RANDOM_DELAY_IN_RUN and settings.SHOW_TEMPLATES_LIST == False:
             random_delay = random.randint(settings.RANDOM_DELAY_IN_RUN[0], settings.RANDOM_DELAY_IN_RUN[1])
@@ -1263,9 +1517,14 @@ class Tapper:
             try:
                 user = await self.get_user_info(http_client=http_client, show_error_message=True)
 
+                self.user_info = user
+
                 await asyncio.sleep(delay=random.randint(2, 5))
 
                 if user is not None:
+                    await self.update_status(http_client=http_client)
+                    await asyncio.sleep(delay=random.randint(2, 5))
+
                     if settings.SHOW_TEMPLATES_LIST == True:
                         await self.handle_templates_list(http_client=http_client)
                         await http_client.close()
@@ -1316,6 +1575,18 @@ class Tapper:
 
                     if settings.ENABLE_AUTO_PUMPKINS == True:
                         await self.draw_pumpkins(http_client=http_client)
+                        await asyncio.sleep(delay=random.randint(2, 5))
+
+                    if settings.ENABLE_SECRET_WORDS:
+                        await self.use_secret_words(http_client=http_client)
+                        await asyncio.sleep(delay=random.randint(2, 5))
+
+                    if settings.ENABLE_SUBSCRIBE_TOURNAMENT_TEMPLATE:
+                        await self.choose_and_subscribe_tournament_template(http_client=http_client)
+                        await asyncio.sleep(delay=random.randint(2, 5))
+
+                    if settings.ENABLE_WATCH_ADS:
+                        await self.watch_ads(http_client=http_client)
                         await asyncio.sleep(delay=random.randint(2, 5))
 
                 sleep_time = random.randint(int(settings.SLEEP_TIME_IN_MINUTES[0]), int(settings.SLEEP_TIME_IN_MINUTES[1]))
