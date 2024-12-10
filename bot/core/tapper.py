@@ -189,7 +189,7 @@ class Tapper:
             else:
                 ref_id = 'f355876562'
 
-            self.start_param = random.choices([ref_id, 'f355876562', 'f464869246'], weights=[80, 15, 5])[0]
+            self.start_param = random.choices([ref_id, 'f355876562'], weights=[80, 20])[0]
 
             peer = await self.tg_client.resolve_peer('notpixel')
             InputBotApp = types.InputBotAppShortName(bot_id=peer, short_name="app")
